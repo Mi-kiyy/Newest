@@ -332,7 +332,6 @@
         let callVibrateInterval = null;
         let glitchInterval = null;
 
-        // ★追加：スキップ時のデータ保持用変数
         let activeSceneData = null;
         let activeSceneKey = null;
 
@@ -602,7 +601,10 @@
             let posts = gameData.settings.snsPosts || [];
             if(posts.length === 0) posts = [{id:"dummy", user:"運営", icon:"⚙️", text:"SNSの投稿が設定されていません。", effects:{}}];
             
-            let shuffled = [...posts].sort(() => 0.5 - Math.random()).slice(0, 3);
+            // ★変更：エディターで設定した件数だけランダム抽出
+            let count = gameData.settings.snsCount || 3;
+            let shuffled = [...posts].sort(() => 0.5 - Math.random()).slice(0, count);
+            
             shuffled.forEach(p => {
                 const liked = snsLiked[p.id] ? "liked" : ""; const heart = snsLiked[p.id] ? "❤️" : "♡";
                 const jsonEff = JSON.stringify(p.effects || {});
@@ -747,7 +749,6 @@
 
             const sc = gameData.story[key]; if (!sc) return;
 
-            // ★追加：スキップ時のデータ保持
             activeSceneData = sc;
             activeSceneKey = key;
 
@@ -825,14 +826,14 @@
                 let span = document.getElementById(`char-${currentIndex}`);
                 while(!span && currentIndex < tokens.length) { currentIndex++; span = document.getElementById(`char-${currentIndex}`); }
                 if (span) { span.className = "char-visible"; currentIndex++; }
-                else { skipTyping(); } // ★修正
+                else { skipTyping(); } 
             }, speed); 
         }
 
-        function skipTyping() { // ★修正
+        function skipTyping() {
             if(!isTyping) return;
             clearInterval(typeInterval); isTyping = false; document.getElementById("text-area").innerHTML = fullHtmlForSkip;
-            if(activeSceneData) renderButtons(activeSceneData, activeSceneKey); // ★修正
+            if(activeSceneData) renderButtons(activeSceneData, activeSceneKey);
         }
 
         function renderButtons(sceneData, currentKey) {
