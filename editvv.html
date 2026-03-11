@@ -139,11 +139,12 @@
                     <div class="form-group"><label>文字の表示スピード</label><select id="g-text-speed"><option value="30">速い</option><option value="75">普通</option><option value="150">遅い</option></select></div>
                 </div>
                 <div class="form-group"><label>状況説明文</label><textarea id="g-intro-text" oninput="updateIntroPreview()"></textarea></div>
+                <div class="form-group"><label>開始ボタンの文章</label><input type="text" id="g-intro-btn" placeholder="はじめる" oninput="updateIntroPreview()"></div>
                 
                 <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">部活動選択画面の設定</h3>
                 <div class="form-row">
-                    <div class="form-group" style="flex:1;"><label>タイトル</label><input type="text" id="g-club-title" placeholder="健康改善ADV" oninput="updateIntroPreview()"></div>
-                    <div class="form-group" style="flex:2;"><label>説明文</label><input type="text" id="g-club-desc" placeholder="プレイヤー名と所属する部活を選択してください" oninput="updateIntroPreview()"></div>
+                    <div class="form-group" style="flex:1;"><label>タイトル</label><input type="text" id="g-club-title" placeholder="健康改善ADV"></div>
+                    <div class="form-group" style="flex:2;"><label>説明文</label><input type="text" id="g-club-desc" placeholder="プレイヤー名と所属する部活を選択してください"></div>
                 </div>
                 
                 <h4 style="margin-top:15px;">部活動の選択肢 <button class="btn-add" onclick="addClub()">+ 追加</button></h4>
@@ -175,13 +176,11 @@
 
             <div id="sub-status" class="sub-tab-content card">
                 <h2>📊 ステータス設定 <button class="btn-add" onclick="addStatus()">+ 追加</button></h2>
-                <p style="font-size:12px; color:#666;">※睡眠時間が4時間未満になると視界がぼやけます。<br>※その他のステータスが15以下になると画面にノイズが走ります。</p>
                 <div id="status-container"></div>
             </div>
 
             <div id="sub-item" class="sub-tab-content card">
                 <h2>🥫 アイテム・アプリ設定 <button class="btn-add" onclick="addItem()">+ 追加</button></h2>
-                <p style="font-size:12px; color:#d32f2f; font-weight:bold;">※内部IDを「sns」にするとSNSアプリ、「wallpaper」にすると壁紙変更アプリが開きます。</p>
                 <div id="items-container"></div>
             </div>
 
@@ -192,7 +191,6 @@
 
             <div id="sub-trivia" class="sub-tab-content card">
                 <h2>💡 豆知識設定 <button class="btn-add" onclick="addTrivia()">+ 追加</button></h2>
-                <p style="font-size:12px; color:#666;">スマホ画面内に常時表示されるウィジェットとしてランダム表示されます。</p>
                 <div id="trivia-container"></div>
             </div>
 
@@ -275,13 +273,11 @@
             <div class="card">
                 <h2>🏆 ランキング管理</h2>
                 <p style="font-size:12px; color:#666;">プレイヤーが登録したランキング記録を確認・削除できます。</p>
-                <div id="editor-leaderboard-container" style="background:#f9f9f9; padding:10px; border-radius:5px; max-height:400px; overflow-y:auto; margin-bottom:15px;">
-                    </div>
+                <div id="editor-leaderboard-container" style="background:#f9f9f9; padding:10px; border-radius:5px; max-height:400px; overflow-y:auto; margin-bottom:15px;"></div>
                 <button class="save-btn" style="background:#d32f2f;" onclick="clearAllRanking()">🗑️ すべてのランキング記録を削除する</button>
                 <button class="save-btn" style="margin-top:10px;" onclick="saveRankingToCloud(this)">☁️ ランキングの変更をクラウドに保存</button>
             </div>
         </div></div>
-
     </div>
 
     <div id="preview-area">
@@ -315,7 +311,7 @@
     const BIN_ID = "69ad50e4ae596e708f6c71b0"; 
     const API_KEY = "$2a$10$5JpuS6TiYmI4DoDPkXZtguvz1N9ooUw2fHg9.SGZjO8fTS.qboP6y";
 
-    let gameData = { settings: { stats: [], clubs: [], items: [], bgms: [], customBgs: [], snsPosts: [], wallpapers: [], trivia: [], gameOverConditions: [], lifestyleTypes: {}, introBg: "room_m", textSpeed: 75, creditText: "" }, story: {}, leaderboard: [] };
+    let gameData = { settings: { stats: [], clubs: [], items: [], bgms: [], customBgs: [], snsPosts: [], wallpapers: [], trivia: [], gameOverConditions: [], lifestyleTypes: {}, introBg: "room_m", introBtn: "はじめる", textSpeed: 75, creditText: "" }, story: {}, leaderboard: [] };
     let currentSceneId = null;
 
     const bgPaths = { 
@@ -475,13 +471,12 @@
     function renderSettings() {
         const s = gameData.settings;
         document.getElementById("g-intro-text").value = s.introText || ""; 
+        document.getElementById("g-intro-btn").value = s.introBtn || "はじめる"; 
         document.getElementById("g-text-speed").value = s.textSpeed || 75;
         document.getElementById("g-intro-bg").innerHTML = buildBgOptionsHtml(s.introBg || "room_m");
         
         document.getElementById("g-club-title").value = s.clubTitle || "健康改善ADV";
         document.getElementById("g-club-desc").value = s.clubDesc || "プレイヤー名と所属する部活を選択してください";
-
-        // 💡 追加：クレジットテキスト
         document.getElementById("g-credit-text").value = s.creditText || "";
 
         document.getElementById("g-se-click").value = s.seClick || "";
@@ -672,6 +667,7 @@
     function saveGlobalSettings(silent=false) {
         const s = gameData.settings;
         s.introText = document.getElementById("g-intro-text").value; 
+        s.introBtn = document.getElementById("g-intro-btn").value || "はじめる";
         s.textSpeed = parseInt(document.getElementById("g-text-speed").value) || 75;
         s.clubTitle = document.getElementById("g-club-title").value;
         s.clubDesc = document.getElementById("g-club-desc").value;
@@ -743,7 +739,7 @@
         document.getElementById("prev-bg").style.backgroundImage = bgStyle; 
         document.getElementById("prev-clock").innerText = ""; 
         document.getElementById("prev-text").innerHTML = document.getElementById("g-intro-text").value.replace(/\n/g, '<br>'); 
-        document.getElementById("prev-buttons").innerHTML = `<button class="prev-btn">はじめる</button>`;
+        document.getElementById("prev-buttons").innerHTML = `<button class="prev-btn">${document.getElementById("g-intro-btn").value || "はじめる"}</button>`;
     }
 
     function renderSidebar() {
