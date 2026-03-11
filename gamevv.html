@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>健康改善アドベンチャー - 本編</title>
     <style>
-        body { font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif; margin: 0; padding: 0; height: 100svh; background: #000; overflow: hidden; user-select: none; }
+        body { font-family: "Helvetica Neue", "Arial", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif; margin: 0; padding: 0; height: 100svh; background: #000; overflow: hidden; user-select: none; touch-action: manipulation; }
         
         #bg-layer-1, #bg-layer-2 { position: fixed; top: 0; left: 0; width: 100vw; height: 100svh; z-index: -1; transition: opacity 1s ease-in-out; background-size: cover; background-position: center; background-repeat: no-repeat; }
         #bg-layer-1 { opacity: 1; } #bg-layer-2 { opacity: 0; }
@@ -56,7 +56,7 @@
         .phone-status-bar { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: #333; text-shadow: 0 0 3px rgba(255,255,255,0.8); margin-top: 10px; margin-bottom: 5px; }
         #clock-display { flex: 1; text-align: center; }
 
-        /* 🔔 通知バナー（ブルブル跳ねるアニメーション） */
+        /* 🔔 通知バナー */
         #push-notification {
             position: absolute; top: 20px; left: 10px; width: calc(100% - 20px); box-sizing: border-box;
             z-index: 50; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
@@ -73,7 +73,7 @@
         .push-header { display: flex; align-items: center; gap: 5px; font-size: 8px; color: #ff3b30; margin-bottom: 2px; font-weight: bold; }
         .push-body { font-size: 9px; font-weight: bold; color: #333; line-height: 1.2; }
 
-        /* 💡 豆知識ウィジェット（常時表示） */
+        /* 💡 豆知識ウィジェット */
         #trivia-widget {
             background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);
             border-radius: 6px; padding: 6px; margin-bottom: 10px; margin-top: 5px;
@@ -332,6 +332,10 @@
         let callVibrateInterval = null;
         let glitchInterval = null;
 
+        // ★追加：スキップ時のデータ保持用変数
+        let activeSceneData = null;
+        let activeSceneKey = null;
+
         let audioBGM = new Audio();
         audioBGM.loop = true;
 
@@ -484,7 +488,6 @@
             audioBGM.pause();
             sleepRecords = {}; snsLiked = {}; currentBgLayer = 1;
             
-            // 💡 修正：ゲームオーバー等の影響でついていたクラスを確実に剥がす
             if(glitchInterval) { clearInterval(glitchInterval); glitchInterval = null; }
             document.body.classList.remove("glitch-active");
             document.getElementById("bg-layer-1").classList.remove("sleep-deprived-blur");
@@ -514,7 +517,6 @@
             
             renderStatusUI(); renderItemUI();
             
-            // 💡 修正：動的に最初のシーン(key)を探し出して、introにセットする
             let firstSceneKey = Object.keys(gameData.story).find(k => k !== "intro" && k !== "end");
             if (!firstSceneKey) firstSceneKey = "end";
 
@@ -526,7 +528,6 @@
                 choices: [{ text: startBtnText, next: firstSceneKey }] 
             };
             
-            // loadSceneを呼び出して画面を表示
             loadScene("intro");
         }
 
@@ -743,11 +744,12 @@
 
         function loadScene(key) {
             if (key === "end") { showResultScreen(); return; }
-            
-            // 💡 修正：ここで intro を引いた場合の無限ループ防止のインターセプトを完全に除去
-            // resetGame() 経由で純粋に intro を読み込めるようになりました
 
             const sc = gameData.story[key]; if (!sc) return;
+
+            // ★追加：スキップ時のデータ保持
+            activeSceneData = sc;
+            activeSceneKey = key;
 
             if (sc.bgm !== undefined) playBGM(sc.bgm);
 
@@ -823,14 +825,14 @@
                 let span = document.getElementById(`char-${currentIndex}`);
                 while(!span && currentIndex < tokens.length) { currentIndex++; span = document.getElementById(`char-${currentIndex}`); }
                 if (span) { span.className = "char-visible"; currentIndex++; }
-                else { skipTyping(sceneData, currentKey); } 
+                else { skipTyping(); } // ★修正
             }, speed); 
         }
 
-        function skipTyping(sceneData = null, currentKey = null) {
+        function skipTyping() { // ★修正
             if(!isTyping) return;
             clearInterval(typeInterval); isTyping = false; document.getElementById("text-area").innerHTML = fullHtmlForSkip;
-            if(sceneData) renderButtons(sceneData, currentKey);
+            if(activeSceneData) renderButtons(activeSceneData, activeSceneKey); // ★修正
         }
 
         function renderButtons(sceneData, currentKey) {
@@ -967,7 +969,6 @@
             if (choice.randomProb && Math.random() * 100 < choice.randomProb) isRandomHit = true;
 
             const checkGameOver = () => {
-                // 💡 修正：特定のシーンへの移動時はゲームオーバー判定を回避
                 if (choice.next === "intro" || choice.next === "end") return false;
 
                 const goCond = gameData.settings.gameOverConditions.find(go => {
@@ -976,7 +977,6 @@
                     return met; 
                 });
                 
-                // 💡 修正：ゲームオーバー条件を満たしており、現在ゲームオーバーシーンにいない場合のみ移動
                 if (goCond && currentKey !== goCond.nextScene) { 
                     loadScene(goCond.nextScene); 
                     return true; 
@@ -1000,7 +1000,6 @@
 
             if (checkGameOver()) return;
 
-            // 💡 修正：シナリオ内で「intro」に戻る選択をした場合、タイトル（部活選択）へ戻す
             if (choice.next === "intro") {
                 backToTitle();
                 return;
