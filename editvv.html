@@ -68,14 +68,26 @@
         .prev-notif-btn { border: 1px dashed #f57c00; background: #fff9c4; color: #e65100; }
         .prev-call-btn { border: none; background: #4caf50; color: white; border-radius: 20px; }
 
-        .highlight-box { background: #fff3e0; border: 1px solid #90caf9; padding: 10px; border-radius: 5px; margin-top: 10px; }
-        .lock-box { background: #fce4ec; border: 1px solid #f8bbd0; padding: 10px; border-radius: 5px; margin-top: 10px; }
+        #push-notification { position: absolute; top: 20px; left: 10px; width: calc(100% - 20px); box-sizing: border-box; z-index: 50; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 8px; padding: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: none; border-left: 3px solid #ff3b30; }
+        .push-header { display: flex; align-items: center; gap: 5px; font-size: 8px; color: #ff3b30; margin-bottom: 2px; font-weight: bold; }
+        .push-body { font-size: 9px; font-weight: bold; color: #333; line-height: 1.2; }
+        #trivia-widget { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); border-radius: 6px; padding: 6px; margin-bottom: 10px; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-left: 3px solid #ffca28; display: none; }
+        .trivia-widget-title { font-size: 7px; color: #f57c00; font-weight: bold; margin-bottom: 2px; }
+        .trivia-widget-text { font-size: 8px; color: #444; line-height: 1.3; font-weight: bold; }
+
         #io-modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center; }
         .modal-content { background:white; padding:20px; border-radius:8px; width:80%; max-width:700px; }
         #io-textarea { width:100%; height:300px; font-family:monospace; margin-bottom:15px; font-size: 12px; }
     </style>
 </head>
 <body>
+
+<datalist id="icon-presets">
+    <option value="🎁">🎁 プレゼント</option>
+    <option value="💊">💊 クスリ</option>
+    <option value="📱">📱 スマホ</option>
+    <option value="./twitter.png">🐦 Twitterアイコン (画像)</option>
+</datalist>
 
 <div id="password-screen">
     <div class="pass-box">
@@ -104,17 +116,20 @@
         <div class="main-tabs">
             <button class="main-tab-btn active" onclick="switchMainTab('tab-settings', this)">⚙️ 全体設定</button>
             <button class="main-tab-btn" onclick="switchMainTab('tab-scenario', this)">📖 シナリオ編集</button>
+            <button class="main-tab-btn" onclick="switchMainTab('tab-ranking', this)">🏆 ランキング管理</button>
         </div>
 
         <div id="tab-settings" class="main-tab-content active"><div class="full-width">
             <div class="sub-tabs">
-                <button class="sub-tab-btn active" onclick="switchSubTab('sub-basic', this)">ゲーム開始</button>
+                <button class="sub-tab-btn active" onclick="switchSubTab('sub-basic', this)">ゲーム開始(部活)</button>
                 <button class="sub-tab-btn" onclick="switchSubTab('sub-bg', this)">🖼️ 背景画像</button>
                 <button class="sub-tab-btn" onclick="switchSubTab('sub-audio', this)">🎵 音声・BGM</button>
                 <button class="sub-tab-btn" onclick="switchSubTab('sub-status', this)">ステータス</button>
                 <button class="sub-tab-btn" onclick="switchSubTab('sub-item', this)">アイテム</button>
                 <button class="sub-tab-btn" style="color:#1da1f2;" onclick="switchSubTab('sub-sns', this)">🐦 SNS投稿</button>
+                <button class="sub-tab-btn" style="color:#f57c00;" onclick="switchSubTab('sub-trivia', this)">💡 豆知識</button>
                 <button class="sub-tab-btn" style="color:#e65100;" onclick="switchSubTab('sub-lifestyle', this)">✨ 生活タイプ</button>
+                <button class="sub-tab-btn" style="color:#d32f2f;" onclick="switchSubTab('sub-gameover', this)">💀 ゲームオーバー</button>
             </div>
             
             <div id="sub-basic" class="sub-tab-content active card">
@@ -124,6 +139,22 @@
                     <div class="form-group"><label>文字の表示スピード</label><select id="g-text-speed"><option value="30">速い</option><option value="75">普通</option><option value="150">遅い</option></select></div>
                 </div>
                 <div class="form-group"><label>状況説明文</label><textarea id="g-intro-text" oninput="updateIntroPreview()"></textarea></div>
+                
+                <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">部活動選択画面の設定</h3>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;"><label>タイトル</label><input type="text" id="g-club-title" placeholder="健康改善ADV" oninput="updateIntroPreview()"></div>
+                    <div class="form-group" style="flex:2;"><label>説明文</label><input type="text" id="g-club-desc" placeholder="プレイヤー名と所属する部活を選択してください" oninput="updateIntroPreview()"></div>
+                </div>
+                
+                <h4 style="margin-top:15px;">部活動の選択肢 <button class="btn-add" onclick="addClub()">+ 追加</button></h4>
+                <div id="clubs-container"></div>
+
+                <h3 style="margin-top:30px; border-bottom:1px solid #ccc; padding-bottom:5px;">クレジット（著作権等）表示画面の設定</h3>
+                <p style="font-size:12px; color:#666;">部活選択後、ゲーム本編の前に表示されます。空欄の場合は表示されません。</p>
+                <div class="form-group">
+                    <label>クレジット文言</label>
+                    <textarea id="g-credit-text" placeholder="背景画像提供：〇〇&#10;BGM提供：〇〇" style="height:80px;"></textarea>
+                </div>
             </div>
 
             <div id="sub-bg" class="sub-tab-content card">
@@ -144,7 +175,7 @@
 
             <div id="sub-status" class="sub-tab-content card">
                 <h2>📊 ステータス設定 <button class="btn-add" onclick="addStatus()">+ 追加</button></h2>
-                <p style="font-size:12px; color:#666;">※睡眠時間が4時間未満になると視界がぼやけるエフェクトが発動します。<br>※その他のステータスが15以下になると画面にノイズ（グリッチ）が走ります。</p>
+                <p style="font-size:12px; color:#666;">※睡眠時間が4時間未満になると視界がぼやけます。<br>※その他のステータスが15以下になると画面にノイズが走ります。</p>
                 <div id="status-container"></div>
             </div>
 
@@ -156,13 +187,23 @@
 
             <div id="sub-sns" class="sub-tab-content card">
                 <h2>🐦 SNS投稿の設定 <button class="btn-add" onclick="addSnsPost()">+ 追加</button></h2>
-                <p style="font-size:12px; color:#666;">SNSアプリを開いた時にランダムで表示される投稿リストです。</p>
                 <div id="sns-container"></div>
+            </div>
+
+            <div id="sub-trivia" class="sub-tab-content card">
+                <h2>💡 豆知識設定 <button class="btn-add" onclick="addTrivia()">+ 追加</button></h2>
+                <p style="font-size:12px; color:#666;">スマホ画面内に常時表示されるウィジェットとしてランダム表示されます。</p>
+                <div id="trivia-container"></div>
             </div>
 
             <div id="sub-lifestyle" class="sub-tab-content card">
                 <h2>✨ 生活タイプ (MBTI風) の設定</h2>
                 <div id="lifestyle-container"></div>
+            </div>
+
+            <div id="sub-gameover" class="sub-tab-content card">
+                <h2>💀 ゲームオーバー条件設定 <button class="btn-add" onclick="addGameOver()">+ 条件を追加</button></h2>
+                <div id="gameover-container"></div>
             </div>
 
             <button class="save-btn" onclick="saveGlobalSettings()">⚙️ 全体設定を仮保存する</button>
@@ -229,6 +270,18 @@
                 </div>
             </div>
         </div>
+
+        <div id="tab-ranking" class="main-tab-content"><div class="full-width">
+            <div class="card">
+                <h2>🏆 ランキング管理</h2>
+                <p style="font-size:12px; color:#666;">プレイヤーが登録したランキング記録を確認・削除できます。</p>
+                <div id="editor-leaderboard-container" style="background:#f9f9f9; padding:10px; border-radius:5px; max-height:400px; overflow-y:auto; margin-bottom:15px;">
+                    </div>
+                <button class="save-btn" style="background:#d32f2f;" onclick="clearAllRanking()">🗑️ すべてのランキング記録を削除する</button>
+                <button class="save-btn" style="margin-top:10px;" onclick="saveRankingToCloud(this)">☁️ ランキングの変更をクラウドに保存</button>
+            </div>
+        </div></div>
+
     </div>
 
     <div id="preview-area">
@@ -238,6 +291,17 @@
             <div id="prev-smartphone">
                 <div class="prev-notch"></div>
                 <div class="prev-phone-header"><span>📶 docodemo</span> <span id="prev-clock">1日目 07:00</span> <span>🔋</span></div>
+                
+                <div id="push-notification">
+                    <div class="push-header" id="notif-header">💬 新着メッセージ</div>
+                    <div class="push-body" id="push-text"></div>
+                </div>
+
+                <div id="trivia-widget">
+                    <div class="trivia-widget-title">💡 豆知識</div>
+                    <div class="trivia-widget-text" id="trivia-widget-text"></div>
+                </div>
+
                 <div id="prev-status-widgets"></div>
                 <div id="prev-items-wrap"></div>
             </div>
@@ -251,10 +315,18 @@
     const BIN_ID = "69ad50e4ae596e708f6c71b0"; 
     const API_KEY = "$2a$10$5JpuS6TiYmI4DoDPkXZtguvz1N9ooUw2fHg9.SGZjO8fTS.qboP6y";
 
-    let gameData = { settings: { stats: [], items: [], bgms: [], customBgs: [], snsPosts: [], wallpapers: [], lifestyleTypes: {}, introBg: "room_m", textSpeed: 75 }, story: {} };
+    let gameData = { settings: { stats: [], clubs: [], items: [], bgms: [], customBgs: [], snsPosts: [], wallpapers: [], trivia: [], gameOverConditions: [], lifestyleTypes: {}, introBg: "room_m", textSpeed: 75, creditText: "" }, story: {}, leaderboard: [] };
     let currentSceneId = null;
 
-    const bgPaths = { "room_m": "./Gemini_Generated_Image_9n3m5f9n3m5f9n3m.jpg", "room_n": "./Gemini_Generated_Image_x93a34x93a34x93a.jpg", "yard": "./Gemini_Generated_Image_2a4gma2a4gma2a4g.jpg", "class": "./Gemini_Generated_Image_ugcbd4ugcbd4ugcb.jpg", "commute": "./Gemini_Generated_Image_od1fchod1fchod1f.jpg" };
+    const bgPaths = { 
+        "room_m": "./Gemini_Generated_Image_9n3m5f9n3m5f9n3m.jpg", 
+        "room_n": "./Gemini_Generated_Image_x93a34x93a34x93a.jpg", 
+        "yard": "./Gemini_Generated_Image_2a4gma2a4gma2a4g.jpg", 
+        "class": "./Gemini_Generated_Image_ugcbd4ugcbd4ugcb.jpg", 
+        "commute": "./Gemini_Generated_Image_od1fchod1fchod1f.jpg", 
+        "panic": "repeating-conic-gradient(from 0deg, #6a040f 0deg 10deg, #370617 10deg 20deg)",
+        "custom1": "./27305713.jpg"
+    };
     const statColors = ["#2ecc71", "#3498db", "#9b59b6", "#f1c40f", "#e67e22", "#e74c3c"];
 
     const defaultLifestyleTypes = {
@@ -270,6 +342,12 @@
         "type_max": { name: "極めし者タイプ", desc: "何かの数値を極限まで高めました！", cond: "いずれかが100に到達" }
     };
 
+    const defaultClubs = [
+        { id: "club_home", name: "🏠 帰宅部", en: "GO HOME CLUB", desc: "標準的なステータスで開始します。", effects: {} },
+        { id: "club_sports", name: "🏃‍♂️ 運動部", en: "SPORTS CLUB", desc: "体力・歩数に初期ボーナスがつきます。", effects: {} },
+        { id: "club_culture", name: "🎨 文化部", en: "CULTURE CLUB", desc: "知力・メンタル等に初期ボーナスがつきます。", effects: {} }
+    ];
+
     function checkPassword() {
         if (document.getElementById("pass-input").value === EDITOR_PASS) {
             document.getElementById("password-screen").style.display = "none";
@@ -284,19 +362,23 @@
             const data = await response.json();
             if(data.record && data.record.settings) gameData = data.record; 
             
-            // 💡 修正：生活タイプが空の時に正しく初期化し、既存のデータも維持する
             if(!gameData.settings.lifestyleTypes || Object.keys(gameData.settings.lifestyleTypes).length === 0) {
                 gameData.settings.lifestyleTypes = JSON.parse(JSON.stringify(defaultLifestyleTypes));
             } else {
                 Object.keys(defaultLifestyleTypes).forEach(k => {
-                    if(!gameData.settings.lifestyleTypes[k]) {
-                        gameData.settings.lifestyleTypes[k] = defaultLifestyleTypes[k];
-                    }
+                    if(!gameData.settings.lifestyleTypes[k]) gameData.settings.lifestyleTypes[k] = defaultLifestyleTypes[k];
                 });
+            }
+
+            if(!gameData.settings.clubs || gameData.settings.clubs.length === 0) {
+                gameData.settings.clubs = JSON.parse(JSON.stringify(defaultClubs));
             }
 
             if(!gameData.settings.snsPosts) gameData.settings.snsPosts = [];
             if(!gameData.settings.wallpapers) gameData.settings.wallpapers = [];
+            if(!gameData.settings.trivia) gameData.settings.trivia = [];
+            if(!gameData.settings.gameOverConditions) gameData.settings.gameOverConditions = [];
+            if(!gameData.leaderboard) gameData.leaderboard = [];
         } catch (e) { console.error(e); }
         init(); 
     }
@@ -335,7 +417,7 @@
 
     function buildBgOptionsHtml(selectedValue) {
         let html = `<optgroup label="デフォルト画像">`;
-        const defaults = [{val: 'room_m', name: '部屋(朝)'}, {val: 'room_n', name: '部屋(夜)'}, {val: 'yard', name: '校庭'}, {val: 'class', name: '教室'}, {val: 'commute', name: '通学路'}, {val: 'panic', name: 'パニック(演出)'}];
+        const defaults = [{val: 'room_m', name: '部屋(朝)'}, {val: 'room_n', name: '部屋(夜)'}, {val: 'yard', name: '校庭'}, {val: 'class', name: '教室'}, {val: 'commute', name: '通学路'}, {val: 'panic', name: 'パニック(演出)'}, {val: 'custom1', name: '自然の風景 (27305713.jpg)'}];
         defaults.forEach(d => { html += `<option value="${d.val}" ${selectedValue===d.val?'selected':''}>${d.name}</option>`; });
         html += `</optgroup>`;
         if (gameData.settings.customBgs && gameData.settings.customBgs.length > 0) {
@@ -355,7 +437,11 @@
     function getBgUrlStyle(bgId) {
         if (!bgId) return "";
         if (bgId === "panic") return "repeating-conic-gradient(from 0deg, #6a040f 0deg 10deg, #370617 10deg 20deg)";
-        if (bgPaths[bgId]) return `url('${bgPaths[bgId]}')`;
+        if (bgPaths[bgId]) {
+            let path = bgPaths[bgId];
+            if (!path.startsWith("url") && !path.startsWith("repeat")) return `url('${path}')`;
+            return path;
+        }
         if (gameData.settings.customBgs) { const custom = gameData.settings.customBgs.find(b => b.id === bgId); if (custom && custom.url) return `url('${custom.url}')`; }
         return `url('${bgPaths["room_m"]}')`;
     }
@@ -377,6 +463,7 @@
         document.getElementById(tabId).classList.add('active'); btnObj.classList.add('active');
         if (tabId === 'tab-settings') { renderSettings(); updateIntroPreview(); }
         if (tabId === 'tab-scenario') { renderSidebar(); if(currentSceneId) updatePreview(); }
+        if (tabId === 'tab-ranking') renderRankingEditor();
     }
     function switchSubTab(tabId, btnObj) {
         document.querySelectorAll('.sub-tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.sub-tab-btn').forEach(el => el.classList.remove('active'));
@@ -391,6 +478,12 @@
         document.getElementById("g-text-speed").value = s.textSpeed || 75;
         document.getElementById("g-intro-bg").innerHTML = buildBgOptionsHtml(s.introBg || "room_m");
         
+        document.getElementById("g-club-title").value = s.clubTitle || "健康改善ADV";
+        document.getElementById("g-club-desc").value = s.clubDesc || "プレイヤー名と所属する部活を選択してください";
+
+        // 💡 追加：クレジットテキスト
+        document.getElementById("g-credit-text").value = s.creditText || "";
+
         document.getElementById("g-se-click").value = s.seClick || "";
         document.getElementById("g-se-notif").value = s.seNotif || "";
         document.getElementById("g-se-error").value = s.seError || "";
@@ -415,6 +508,7 @@
                 <div class="form-group"><label>ID</label><input type="text" class="st-id" value="${st.id}" oninput="syncSettingsToPreview()"></div>
                 <div class="form-group"><label>名前</label><input type="text" class="st-name" value="${st.name}" oninput="syncSettingsToPreview()"></div>
                 <div class="form-group"><label>初期値</label><input type="number" class="st-init" value="${st.init}" oninput="syncSettingsToPreview()"></div>
+                <div class="form-group"><label>限界値(MAX)</label><input type="number" class="st-max" value="${st.max !== undefined ? st.max : 100}" oninput="syncSettingsToPreview()"></div>
                 <div class="form-group" style="display:flex; flex-direction:column; justify-content:center; gap:5px; padding-top:15px;">
                     <label style="cursor:pointer; color:#f57c00;"><input type="checkbox" class="st-step" ${st.isStep?'checked':''} onchange="syncSettingsToPreview()"> 👣 歩数計として扱う</label>
                     <label style="cursor:pointer; color:#5c6bc0;"><input type="checkbox" class="st-sleep" ${st.isSleep?'checked':''} onchange="syncSettingsToPreview()"> 🌙 平均睡眠時間として扱う</label>
@@ -422,16 +516,35 @@
                 <button class="btn-remove" style="margin-top:25px;" onclick="removeStatus(${i})">削除</button>
             </div>`; 
         });
+
+        const cCont = document.getElementById("clubs-container"); cCont.innerHTML = "";
+        (s.clubs || []).forEach((club, i) => {
+            let effHtml = s.stats.map(st => `<div class="form-group"><label>${st.name}</label><input type="number" class="club-eff" data-stid="${st.id}" value="${(club.effects && club.effects[st.id]) ? club.effects[st.id] : 0}"></div>`).join('');
+            cCont.innerHTML += `
+            <div class="list-item">
+                <div class="form-row">
+                    <div class="form-group"><label>内部ID</label><input type="text" class="club-id" value="${club.id}"></div>
+                    <div class="form-group"><label>部活名</label><input type="text" class="club-name" value="${club.name}"></div>
+                    <div class="form-group"><label>英語のサブタイトル</label><input type="text" class="club-en" value="${club.en}"></div>
+                </div>
+                <div class="form-group"><label>説明文</label><input type="text" class="club-desc" value="${club.desc}"></div>
+                <div class="form-row" style="background:#fff; padding:10px; border-radius:4px; border:1px solid #eee;">
+                    <div style="width:100%; font-size:12px; font-weight:bold; color:#1976d2; margin-bottom:5px;">▼ 選んだ時のステータス初期ボーナス</div>
+                    ${effHtml}
+                </div>
+                <button class="btn-remove" style="position:absolute; top:15px; right:15px;" onclick="removeClub(${i})">削除</button>
+            </div>`;
+        });
         
         const iCont = document.getElementById("items-container"); iCont.innerHTML = "";
         (s.items || []).forEach((it, i) => {
-            let effHtml = s.stats.map(st => `<div class="form-group"><label>${st.name}の増減</label><input type="number" class="it-eff" data-stid="${st.id}" value="${(it.effects && it.effects[st.id]) ? it.effects[st.id] : 0}"></div>`).join('');
+            let effHtml = s.stats.map(st => `<div class="form-group"><label>${st.name}増減</label><input type="number" class="it-eff" data-stid="${st.id}" value="${(it.effects && it.effects[st.id]) ? it.effects[st.id] : 0}"></div>`).join('');
             iCont.innerHTML += `
             <div class="list-item" data-idx="${i}">
                 <div class="form-row">
                     <div class="form-group"><label>内部ID</label><input type="text" class="it-id" value="${it.id}"></div>
                     <div class="form-group"><label>アイテム名</label><input type="text" class="it-name" value="${it.name}"></div>
-                    <div class="form-group"><label>UI画像 (URL or 絵文字)</label><input type="text" class="it-icon" value="${it.icon || '🎁'}"></div>
+                    <div class="form-group"><label>UI画像 (絵文字 or URL)</label><input type="text" class="it-icon" list="icon-presets" value="${it.icon || './twitter.png'}"></div>
                     <div class="form-group"><label>最大使用回数</label><input type="number" class="it-max" value="${it.maxUse}"></div>
                 </div>
                 <div class="form-row" style="background:#fff; padding:10px; border-radius:4px; border:1px solid #eee;">${effHtml}</div>
@@ -439,7 +552,6 @@
             </div>`;
         });
 
-        // SNS設定
         const snsCont = document.getElementById("sns-container"); snsCont.innerHTML = "";
         (s.snsPosts || []).forEach((post, i) => {
             let effHtml = s.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="sns-eff" data-stid="${st.id}" value="${(post.effects && post.effects[st.id]) ? post.effects[st.id] : 0}"></div>`).join('');
@@ -458,7 +570,22 @@
             </div>`;
         });
 
-        // 💡 修正：生活タイプのロードを確実にする
+        const tCont = document.getElementById("trivia-container"); tCont.innerHTML = "";
+        (s.trivia || []).forEach((tr, i) => {
+            tCont.innerHTML += `
+            <div class="list-item">
+                <div class="form-row">
+                    <input type="text" class="tr-text" value="${tr.text || tr}" style="flex:1;">
+                    <button class="btn-remove" onclick="removeTrivia(${i})">削除</button>
+                </div>
+            </div>`;
+        });
+
+        const goCont = document.getElementById("gameover-container"); goCont.innerHTML = "";
+        (s.gameOverConditions || []).forEach((go, i) => {
+            goCont.innerHTML += `<div class="list-item" style="border-left:4px solid #d32f2f;"><div class="form-row"><div class="form-group"><label>対象ステータス</label><select class="go-stat">${buildStatOptionsHtml(go.statId)}</select></div><div class="form-group"><label>条件</label><select class="go-op"><option value="<=" ${go.operator==='<='?'selected':''}>以下になったら</option><option value=">=" ${go.operator==='>='?'selected':''}>以上になったら</option></select></div><div class="form-group"><label>数値</label><input type="number" class="go-val" value="${go.value}"></div><div class="form-group"><label>強制移動先</label><select class="go-next">${buildSceneOptionsHtml(go.nextScene)}</select></div></div><button class="btn-remove" style="position:absolute; top:10px; right:10px;" onclick="removeGameOver(${i})">削除</button></div>`;
+        });
+
         renderLifestyleConfig();
     }
 
@@ -470,8 +597,6 @@
             const def = defaultLifestyleTypes[k]; 
             const tData = types[k] || def;
             
-            // 💡 textarea等でHTMLが崩れないようにエスケープや置換を入れるのがベターですが、
-            // 今回は単純に正しく値が埋め込まれるか確認します。
             lsCont.innerHTML += `
             <div class="list-item ls-item" data-key="${k}" style="border-left: 5px solid ${statColors[i % statColors.length]}">
                 <div style="font-weight:bold; color:#555; margin-bottom:8px;">条件: ${def.cond}</div>
@@ -481,42 +606,95 @@
         });
     }
 
+    function renderRankingEditor() {
+        const lbContainer = document.getElementById("editor-leaderboard-container");
+        lbContainer.innerHTML = "";
+        let board = gameData.leaderboard || [];
+        
+        if (board.length === 0) {
+            lbContainer.innerHTML = "<p style='color:#888;'>記録がありません。</p>";
+            return;
+        }
+
+        board.forEach((entry, i) => {
+            lbContainer.innerHTML += `
+            <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; padding:10px;">
+                <div>
+                    <strong style="color:#f57c00; font-size:16px;">${entry.score}pt</strong> - <span style="font-weight:bold;">${entry.name}</span> 
+                    <small style="color:#888;">(${entry.typeName || '-'}) [${entry.date || ''}]</small>
+                </div>
+                <button class="btn-remove" onclick="removeRankingRecord(${i})">削除</button>
+            </div>`;
+        });
+    }
+
+    function removeRankingRecord(i) {
+        if (!confirm("この記録を削除しますか？")) return;
+        if(gameData.leaderboard) {
+            gameData.leaderboard.splice(i, 1);
+            renderRankingEditor();
+        }
+    }
+
+    function clearAllRanking() {
+        if (!confirm("本当にすべてのランキング記録を削除しますか？（元に戻せません）")) return;
+        gameData.leaderboard = [];
+        renderRankingEditor();
+    }
+
+    async function saveRankingToCloud(btn) {
+        const originalText = btn.innerText;
+        btn.innerText = "☁️ 保存中..."; btn.style.opacity = "0.5";
+        try {
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY }, body: JSON.stringify(gameData) });
+            btn.innerText = originalText; btn.style.opacity = "1";
+            alert("☁️ ランキングの変更をクラウドに保存しました！");
+        } catch (e) { alert("保存失敗"); btn.innerText = originalText; btn.style.opacity = "1"; }
+    }
+
+    function addClub() { gameData.settings.clubs.push({ id: "club_" + Date.now().toString().slice(-4), name: "新規の部活", en: "NEW CLUB", desc: "説明文", effects: {} }); renderSettings(); }
+    function removeClub(i) { gameData.settings.clubs.splice(i,1); renderSettings(); }
     function addCustomBg() { gameData.settings.customBgs.push({ id: "bg_" + Math.random().toString(36).substr(2, 6), name: "新規背景", url: "" }); renderSettings(); }
     function removeCustomBg(i) { gameData.settings.customBgs.splice(i,1); renderSettings(); }
     function addBgm() { gameData.settings.bgms.push({ id: "bgm_" + Math.random().toString(36).substr(2, 6), name: "新規BGM", url: "" }); renderSettings(); }
     function removeBgm(i) { gameData.settings.bgms.splice(i,1); renderSettings(); }
-    function addStatus() { gameData.settings.stats.push({ id: "new", name: "新規", init: 50, isStep: false, isSleep: false }); renderSettings(); syncSettingsToPreview(); }
+    function addStatus() { gameData.settings.stats.push({ id: "new", name: "新規", init: 50, max: 100, isStep: false, isSleep: false }); renderSettings(); syncSettingsToPreview(); }
     function removeStatus(i) { if(gameData.settings.stats.length>1) { gameData.settings.stats.splice(i,1); renderSettings(); syncSettingsToPreview(); } }
-    function addItem() { gameData.settings.items.push({ id: "it", name: "新アイテム", maxUse: 1, effects: {}, icon: "🎁" }); renderSettings(); syncSettingsToPreview(); }
+    function addItem() { gameData.settings.items.push({ id: "it", name: "新アイテム", maxUse: 1, effects: {}, icon: "./twitter.png" }); renderSettings(); syncSettingsToPreview(); }
     function removeItem(i) { gameData.settings.items.splice(i,1); renderSettings(); syncSettingsToPreview(); }
-    
     function addSnsPost() { gameData.settings.snsPosts.push({ id: "sns_" + Math.random().toString(36).substr(2, 6), user: "ユーザー", icon: "👤", text: "新しい投稿", effects: {} }); renderSettings(); }
     function removeSnsPost(i) { gameData.settings.snsPosts.splice(i,1); renderSettings(); }
+    function addTrivia() { gameData.settings.trivia.push({ text: "新しい豆知識" }); renderSettings(); }
+    function removeTrivia(i) { gameData.settings.trivia.splice(i,1); renderSettings(); }
+    function addGameOver() { gameData.settings.gameOverConditions.push({ statId: gameData.settings.stats[0] ? gameData.settings.stats[0].id : "", operator: "<=", value: 0, nextScene: "end" }); renderSettings(); }
+    function removeGameOver(i) { gameData.settings.gameOverConditions.splice(i,1); renderSettings(); }
 
     function saveGlobalSettings(silent=false) {
-        // 💡 修正：エラーで途中で止まらないように堅牢にデータを集める
         const s = gameData.settings;
         s.introText = document.getElementById("g-intro-text").value; 
         s.textSpeed = parseInt(document.getElementById("g-text-speed").value) || 75;
+        s.clubTitle = document.getElementById("g-club-title").value;
+        s.clubDesc = document.getElementById("g-club-desc").value;
+        s.creditText = document.getElementById("g-credit-text").value;
         s.seClick = document.getElementById("g-se-click").value;
         s.seNotif = document.getElementById("g-se-notif").value;
         s.seError = document.getElementById("g-se-error").value;
 
+        s.clubs = []; document.querySelectorAll("#clubs-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".club-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) effects[eff.dataset.stid] = val; }); s.clubs.push({ id: el.querySelector(".club-id").value, name: el.querySelector(".club-name").value, en: el.querySelector(".club-en").value, desc: el.querySelector(".club-desc").value, effects: effects }); });
         s.bgms = []; document.querySelectorAll("#bgm-container .list-item").forEach(el => { s.bgms.push({ id: el.dataset.id, name: el.querySelector(".bgm-name").value, url: el.querySelector(".bgm-url").value }); });
         s.customBgs = []; document.querySelectorAll("#bgs-container .list-item").forEach(el => { s.customBgs.push({ id: el.dataset.id, name: el.querySelector(".bg-name").value, url: el.querySelector(".bg-url").value }); });
-        s.stats = []; document.querySelectorAll("#status-container .list-item").forEach(el => { s.stats.push({ id: el.querySelector(".st-id").value, name: el.querySelector(".st-name").value, init: parseInt(el.querySelector(".st-init").value), isStep: el.querySelector(".st-step").checked, isSleep: el.querySelector(".st-sleep").checked }); });
-        s.items = []; document.querySelectorAll("#items-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".it-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0) effects[eff.dataset.stid] = val; }); s.items.push({ id: el.querySelector(".it-id").value, name: el.querySelector(".it-name").value, icon: el.querySelector(".it-icon").value, maxUse: parseInt(el.querySelector(".it-max").value), effects: effects }); });
         
+        s.stats = []; document.querySelectorAll("#status-container .list-item").forEach(el => { s.stats.push({ id: el.querySelector(".st-id").value, name: el.querySelector(".st-name").value, init: parseInt(el.querySelector(".st-init").value), max: parseInt(el.querySelector(".st-max").value) || 100, isStep: el.querySelector(".st-step").checked, isSleep: el.querySelector(".st-sleep").checked }); });
+        
+        s.items = []; document.querySelectorAll("#items-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".it-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0) effects[eff.dataset.stid] = val; }); s.items.push({ id: el.querySelector(".it-id").value, name: el.querySelector(".it-name").value, icon: el.querySelector(".it-icon").value, maxUse: parseInt(el.querySelector(".it-max").value), effects: effects }); });
         s.snsPosts = []; document.querySelectorAll("#sns-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".sns-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0) effects[eff.dataset.stid] = val; }); s.snsPosts.push({ id: el.dataset.id, user: el.querySelector(".sns-user").value, icon: el.querySelector(".sns-icon").value, text: el.querySelector(".sns-text").value, effects: effects }); });
+        s.trivia = []; document.querySelectorAll("#trivia-container .tr-text").forEach(el => { s.trivia.push({ text: el.value }); });
+        s.gameOverConditions = []; document.querySelectorAll("#gameover-container .list-item").forEach(el => { s.gameOverConditions.push({ statId: el.querySelector(".go-stat").value, operator: el.querySelector(".go-op").value, value: parseInt(el.querySelector(".go-val").value) || 0, nextScene: el.querySelector(".go-next").value }); });
 
-        // 💡 修正：生活タイプ変更の確実な保存
         s.lifestyleTypes = {};
         document.querySelectorAll("#lifestyle-container .ls-item").forEach(el => {
             const k = el.dataset.key;
-            s.lifestyleTypes[k] = { 
-                name: el.querySelector(".ls-name").value, 
-                desc: el.querySelector(".ls-desc").value 
-            };
+            s.lifestyleTypes[k] = { name: el.querySelector(".ls-name").value, desc: el.querySelector(".ls-desc").value };
         });
 
         syncSettingsToPreview();
@@ -533,12 +711,16 @@
         const widgetsContainer = document.getElementById("prev-status-widgets"); widgetsContainer.innerHTML = "";
         document.querySelectorAll("#status-container .list-item").forEach((el, i) => { 
             let stName = el.querySelector(".st-name").value || "新規"; 
+            let stInit = parseInt(el.querySelector(".st-init").value) || 0;
+            let stMax = parseInt(el.querySelector(".st-max").value) || 100;
             let isStep = el.querySelector(".st-step").checked; let isSleep = el.querySelector(".st-sleep").checked;
             const color = statColors[i % statColors.length]; 
             
+            let percent = Math.min(100, Math.max(0, (stInit / stMax) * 100));
+
             if (isStep) { widgetsContainer.innerHTML += `<div class="prev-widget step-widget"><div style="font-weight:bold; color:#f57c00; margin-bottom:2px;">👣 ${stName}</div><div style="font-size:10px; font-weight:900;">0 <small style="font-size:6px;">歩</small></div></div>`; } 
             else if (isSleep) { widgetsContainer.innerHTML += `<div class="prev-widget sleep-widget"><div style="font-weight:bold; color:#5c6bc0; margin-bottom:2px;">🌙 ${stName}</div><div style="font-size:10px; font-weight:900;">0.0 <small style="font-size:6px;">時間</small></div></div>`; } 
-            else { widgetsContainer.innerHTML += `<div class="prev-widget"><div style="font-weight:bold; color:#444; margin-bottom:2px;">${stName}</div><div style="height:3px; background:#ddd; border-radius:2px; overflow:hidden;"><div style="height:100%; background:${color}; width:50%;"></div></div></div>`; }
+            else { widgetsContainer.innerHTML += `<div class="prev-widget"><div style="font-weight:bold; color:#444; margin-bottom:2px;">${stName}</div><div style="height:3px; background:#ddd; border-radius:2px; overflow:hidden;"><div style="height:100%; background:${color}; width:${percent}%;"></div></div></div>`; }
         });
 
         const itemsContainer = document.getElementById("prev-items-wrap"); itemsContainer.innerHTML = "";
@@ -546,6 +728,14 @@
             let iconVal = el.querySelector(".it-icon").value || "🎁"; let iconHtml = (iconVal.startsWith("http") || iconVal.startsWith("./")) ? `<img src="${iconVal}" style="width:14px;height:14px;border-radius:3px;">` : `<span>${iconVal}</span>`;
             itemsContainer.innerHTML += `<div class="prev-app-icon">${iconHtml}</div>`; 
         });
+
+        const triviaBox = document.getElementById("trivia-widget");
+        if (gameData.settings.trivia && gameData.settings.trivia.length > 0) {
+            triviaBox.style.display = "block";
+            document.getElementById("trivia-widget-text").innerText = gameData.settings.trivia[0].text || gameData.settings.trivia[0];
+        } else {
+            triviaBox.style.display = "none";
+        }
     }
     
     function updateIntroPreview() {
