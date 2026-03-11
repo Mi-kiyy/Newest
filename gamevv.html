@@ -447,7 +447,6 @@
             let cleanClubName = playerClubData ? playerClubData.name.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim() : "";
             document.getElementById("player-profile").innerText = `📶 ${playerName} (${cleanClubName})`;
 
-            // 💡 追加：クレジット表示の分岐
             if (gameData.settings.creditText && gameData.settings.creditText.trim() !== "") {
                 document.getElementById("credit-text-display").innerText = gameData.settings.creditText;
                 document.getElementById("credit-screen").style.display = "flex";
@@ -466,7 +465,7 @@
             playSE('click');
             document.getElementById("result-screen").style.display = "none";
             document.getElementById("game-wrapper").style.display = "none";
-            document.getElementById("credit-screen").style.display = "none"; // 念のため隠す
+            document.getElementById("credit-screen").style.display = "none"; 
             
             document.getElementById("btn-start-game").classList.remove("active");
             playerClubData = null;
@@ -484,8 +483,13 @@
         function resetGame() {
             audioBGM.pause();
             sleepRecords = {}; snsLiked = {}; currentBgLayer = 1;
-            document.body.classList.remove("glitch-active");
+            
+            // 💡 修正：ゲームオーバー等の影響でついていたクラスを確実に剥がす
             if(glitchInterval) { clearInterval(glitchInterval); glitchInterval = null; }
+            document.body.classList.remove("glitch-active");
+            document.getElementById("bg-layer-1").classList.remove("sleep-deprived-blur");
+            document.getElementById("bg-layer-2").classList.remove("sleep-deprived-blur");
+            document.getElementById("smartphone-ui").classList.remove("sleep-deprived-blur");
 
             gameData.settings.stats.forEach(st => { 
                 let bonus = 0;
@@ -510,7 +514,19 @@
             
             renderStatusUI(); renderItemUI();
             
-            gameData.story["intro"] = { text: gameData.settings.introText, bg: gameData.settings.introBg || "room_m", choices: [{ text: "はじめる", next: "d1_m" }] };
+            // 💡 修正：動的に最初のシーン(key)を探し出して、introにセットする
+            let firstSceneKey = Object.keys(gameData.story).find(k => k !== "intro" && k !== "end");
+            if (!firstSceneKey) firstSceneKey = "end";
+
+            let startBtnText = gameData.settings.introBtn && gameData.settings.introBtn.trim() !== "" ? gameData.settings.introBtn : "はじめる";
+
+            gameData.story["intro"] = { 
+                text: gameData.settings.introText || "ゲームを開始します", 
+                bg: gameData.settings.introBg || "room_m", 
+                choices: [{ text: startBtnText, next: firstSceneKey }] 
+            };
+            
+            // loadSceneを呼び出して画面を表示
             loadScene("intro");
         }
 
@@ -528,27 +544,9 @@
             const phoneUI = document.getElementById("smartphone-ui");
             if(isSleepy) { bg1.classList.add("sleep-deprived-blur"); bg2.classList.add("sleep-deprived-blur"); phoneUI.classList.add("sleep-deprived-blur"); } 
             else { bg1.classList.remove("sleep-deprived-blur"); bg2.classList.remove("sleep-deprived-blur"); phoneUI.classList.remove("sleep-deprived-blur"); }
-
-            let isSick = false;
-            let normalStats = gameData.settings.stats.filter(s => !s.isStep && !s.isSleep);
-            if(normalStats.length > 0) {
-                let minVal = Math.min(...normalStats.map(s => currentStats[s.id]));
-                if(minVal <= 15) isSick = true;
-            }
             
-            if(isSick) {
-                if(!glitchInterval) {
-                    glitchInterval = setInterval(() => {
-                        if(Math.random() < 0.3) { 
-                            document.body.classList.add("glitch-active");
-                            setTimeout(() => document.body.classList.remove("glitch-active"), 200);
-                        }
-                    }, 3000);
-                }
-            } else {
-                if(glitchInterval) { clearInterval(glitchInterval); glitchInterval = null; }
-                document.body.classList.remove("glitch-active");
-            }
+            if(glitchInterval) { clearInterval(glitchInterval); glitchInterval = null; }
+            document.body.classList.remove("glitch-active");
         }
 
         function renderStatusUI() {
@@ -745,7 +743,9 @@
 
         function loadScene(key) {
             if (key === "end") { showResultScreen(); return; }
-            if (key === "intro") { backToTitle(); return; } 
+            
+            // 💡 修正：ここで intro を引いた場合の無限ループ防止のインターセプトを完全に除去
+            // resetGame() 経由で純粋に intro を読み込めるようになりました
 
             const sc = gameData.story[key]; if (!sc) return;
 
@@ -967,6 +967,7 @@
             if (choice.randomProb && Math.random() * 100 < choice.randomProb) isRandomHit = true;
 
             const checkGameOver = () => {
+                // 💡 修正：特定のシーンへの移動時はゲームオーバー判定を回避
                 if (choice.next === "intro" || choice.next === "end") return false;
 
                 const goCond = gameData.settings.gameOverConditions.find(go => {
@@ -975,6 +976,7 @@
                     return met; 
                 });
                 
+                // 💡 修正：ゲームオーバー条件を満たしており、現在ゲームオーバーシーンにいない場合のみ移動
                 if (goCond && currentKey !== goCond.nextScene) { 
                     loadScene(goCond.nextScene); 
                     return true; 
@@ -998,6 +1000,7 @@
 
             if (checkGameOver()) return;
 
+            // 💡 修正：シナリオ内で「intro」に戻る選択をした場合、タイトル（部活選択）へ戻す
             if (choice.next === "intro") {
                 backToTitle();
                 return;
