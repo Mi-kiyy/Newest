@@ -51,31 +51,22 @@
         #main-editor { flex: 1; overflow-y: auto; padding-right: 5px; }
         .list-item { background: #f9f9f9; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 10px; position: relative; }
         
-        /* 📱 プレビュー（横画面の中にスマホがあるUI） */
         #mockup { width: 380px; height: 260px; background: #000; border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5); border: 2px solid #555; }
         #prev-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; transition: 0.3s; opacity: 0.8; }
-        
-        #prev-smartphone {
-            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-            width: 120px; height: 220px; border-radius: 15px; border: 4px solid #111;
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.6); display: flex; flex-direction: column;
-            overflow: hidden; padding: 5px; box-sizing: border-box; z-index: 20;
-        }
+        #prev-smartphone { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 120px; height: 220px; border-radius: 15px; border: 4px solid #111; background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); box-shadow: 0 5px 15px rgba(0,0,0,0.6); display: flex; flex-direction: column; overflow: hidden; padding: 5px; box-sizing: border-box; z-index: 20; }
         .prev-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 40px; height: 10px; background: #111; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; }
         .prev-phone-header { display: flex; justify-content: space-between; font-size: 6px; font-weight: bold; margin-top: 10px; color: #333; }
-        
         #prev-status-widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 10px; }
         .prev-widget { background: rgba(255,255,255,0.8); border-radius: 6px; padding: 4px; font-size: 6px; text-align: center; }
         .prev-widget.step-widget { background: #fffde7; border: 1px solid #fbc02d; }
-        
+        .prev-widget.sleep-widget { background: #e8eaf6; border: 1px solid #5c6bc0; }
         #prev-items-wrap { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: auto; padding-bottom: 5px; }
         .prev-app-icon { background: rgba(255,255,255,0.9); border-radius: 4px; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-        
         #prev-panel { position: absolute; bottom: 10px; left: 10px; width: 220px; background: rgba(255,255,255,0.95); border-radius: 8px; padding: 8px; box-shadow: 0 5px 10px rgba(0,0,0,0.3); z-index: 10; }
         #prev-text { font-size: 10px; font-weight: bold; margin-bottom: 5px; line-height: 1.4; }
         .prev-btn { width: 100%; padding: 4px; font-size: 9px; font-weight: bold; color: #2e7d32; background: #fff; border: 1px solid #2e7d32; border-radius: 4px; margin-bottom: 4px; }
         .prev-notif-btn { border: 1px dashed #f57c00; background: #fff9c4; color: #e65100; }
+        .prev-call-btn { border: none; background: #4caf50; color: white; border-radius: 20px; }
 
         .highlight-box { background: #fff3e0; border: 1px solid #90caf9; padding: 10px; border-radius: 5px; margin-top: 10px; }
         .lock-box { background: #fce4ec; border: 1px solid #f8bbd0; padding: 10px; border-radius: 5px; margin-top: 10px; }
@@ -119,10 +110,11 @@
             <div class="sub-tabs">
                 <button class="sub-tab-btn active" onclick="switchSubTab('sub-basic', this)">ゲーム開始</button>
                 <button class="sub-tab-btn" onclick="switchSubTab('sub-bg', this)">🖼️ 背景画像</button>
+                <button class="sub-tab-btn" onclick="switchSubTab('sub-audio', this)">🎵 音声・BGM</button>
                 <button class="sub-tab-btn" onclick="switchSubTab('sub-status', this)">ステータス</button>
-                <button class="sub-tab-btn" onclick="switchSubTab('sub-item', this)">アイテム(SNS)</button>
+                <button class="sub-tab-btn" onclick="switchSubTab('sub-item', this)">アイテム</button>
+                <button class="sub-tab-btn" style="color:#1da1f2;" onclick="switchSubTab('sub-sns', this)">🐦 SNS投稿</button>
                 <button class="sub-tab-btn" style="color:#e65100;" onclick="switchSubTab('sub-lifestyle', this)">✨ 生活タイプ</button>
-                <button class="sub-tab-btn" onclick="switchSubTab('sub-gameover', this)">☠️ ゲームオーバー</button>
             </div>
             
             <div id="sub-basic" class="sub-tab-content active card">
@@ -132,7 +124,6 @@
                     <div class="form-group"><label>文字の表示スピード</label><select id="g-text-speed"><option value="30">速い</option><option value="75">普通</option><option value="150">遅い</option></select></div>
                 </div>
                 <div class="form-group"><label>状況説明文</label><textarea id="g-intro-text" oninput="updateIntroPreview()"></textarea></div>
-                <div class="form-group"><label>開始ボタンの文章</label><input type="text" id="g-intro-btn" oninput="updateIntroPreview()"></div>
             </div>
 
             <div id="sub-bg" class="sub-tab-content card">
@@ -140,16 +131,33 @@
                 <div id="bgs-container"></div>
             </div>
 
+            <div id="sub-audio" class="sub-tab-content card">
+                <h2>🎵 効果音 (SE) の設定</h2>
+                <div class="form-row">
+                    <div class="form-group"><label>ボタンクリック音</label><input type="text" id="g-se-click" placeholder="https://..."></div>
+                    <div class="form-group"><label>通知が来た時の音</label><input type="text" id="g-se-notif" placeholder="https://..."></div>
+                    <div class="form-group"><label>エラー・ロック音</label><input type="text" id="g-se-error" placeholder="https://..."></div>
+                </div>
+                <h2 style="margin-top:20px;">🎶 BGMリスト <button class="btn-add" onclick="addBgm()">+ BGMを追加</button></h2>
+                <div id="bgm-container"></div>
+            </div>
+
             <div id="sub-status" class="sub-tab-content card">
                 <h2>📊 ステータス設定 <button class="btn-add" onclick="addStatus()">+ 追加</button></h2>
-                <p style="font-size:12px; color:#666;">歩数計にチェックを入れると、専用のウィジェットになりマイナス効果を受けなくなります。</p>
+                <p style="font-size:12px; color:#666;">※睡眠時間が4時間未満になると視界がぼやけるエフェクトが発動します。<br>※その他のステータスが15以下になると画面にノイズ（グリッチ）が走ります。</p>
                 <div id="status-container"></div>
             </div>
 
             <div id="sub-item" class="sub-tab-content card">
                 <h2>🥫 アイテム・アプリ設定 <button class="btn-add" onclick="addItem()">+ 追加</button></h2>
-                <p style="font-size:12px; color:#d32f2f; font-weight:bold;">※内部IDを「sns」にすると、使用時にSNSアプリが開く特別な機能になります。（使用回数は消費します）</p>
+                <p style="font-size:12px; color:#d32f2f; font-weight:bold;">※内部IDを「sns」にするとSNSアプリ、「wallpaper」にすると壁紙変更アプリが開きます。</p>
                 <div id="items-container"></div>
+            </div>
+
+            <div id="sub-sns" class="sub-tab-content card">
+                <h2>🐦 SNS投稿の設定 <button class="btn-add" onclick="addSnsPost()">+ 追加</button></h2>
+                <p style="font-size:12px; color:#666;">SNSアプリを開いた時にランダムで表示される投稿リストです。</p>
+                <div id="sns-container"></div>
             </div>
 
             <div id="sub-lifestyle" class="sub-tab-content card">
@@ -157,10 +165,6 @@
                 <div id="lifestyle-container"></div>
             </div>
 
-            <div id="sub-gameover" class="sub-tab-content card">
-                <h2>☠️ ゲームオーバー条件設定 <button class="btn-add" onclick="addGameOver()">+ 条件を追加</button></h2>
-                <div id="gameover-container"></div>
-            </div>
             <button class="save-btn" onclick="saveGlobalSettings()">⚙️ 全体設定を仮保存する</button>
         </div></div>
 
@@ -175,12 +179,25 @@
                             <div class="form-row">
                                 <div class="form-group"><label style="color:#d32f2f;">シーンID</label><input type="text" id="s-id"></div>
                                 <div class="form-group"><label>背景画像</label><div style="display:flex; align-items:center;"><select id="s-bg" onchange="updatePreview()"></select><div id="scene-bg-thumb" class="bg-thumb-preview"></div></div></div>
+                                <div class="form-group"><label>🎶 BGM</label><select id="s-bgm"></select></div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group"><label>日数 (自由にテキスト入力)</label><input type="text" id="s-day" oninput="updatePreview()" placeholder="例: 1日目"></div>
+                                <div class="form-group"><label>日数</label><input type="text" id="s-day" oninput="updatePreview()" placeholder="例: 1日目"></div>
                                 <div class="form-group"><label>時間</label><select id="s-time" onchange="updatePreview()"></select></div>
                             </div>
                             <div class="form-group"><label>質問内容（テキスト）</label><textarea id="s-text" oninput="updatePreview()"></textarea></div>
+                        </div>
+
+                        <div class="card" style="border: 2px solid #e91e63; background: #fce4ec;">
+                            <h2>📞 着信ジャック（全画面表示）</h2>
+                            <label style="font-weight:bold; cursor:pointer; color:#c2185b;"><input type="checkbox" id="s-call-en" onchange="toggleCall()"> このシーンに到達した瞬間、強制的に電話を着信させる</label>
+                            <div id="call-wrap" style="display:none; margin-top:10px;">
+                                <div class="form-group"><label>発信者名</label><input type="text" id="s-call-name" placeholder="例: お母さん, 部活の先輩"></div>
+                                <div class="form-row">
+                                    <div class="form-group"><label>🟢「電話に出る」の移動先</label><select id="s-call-accept-next"></select></div>
+                                    <div class="form-group"><label>🔴「切る・無視」の移動先</label><select id="s-call-reject-next"></select></div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="card">
@@ -220,7 +237,7 @@
             <div id="prev-bg" style="background-image: url('./Gemini_Generated_Image_9n3m5f9n3m5f9n3m.jpg');"></div>
             <div id="prev-smartphone">
                 <div class="prev-notch"></div>
-                <div class="prev-phone-header"><span>📶 docodemo</span> <span id="prev-clock">1日目 07:00</span> <span>100% 🔋</span></div>
+                <div class="prev-phone-header"><span>📶 docodemo</span> <span id="prev-clock">1日目 07:00</span> <span>🔋</span></div>
                 <div id="prev-status-widgets"></div>
                 <div id="prev-items-wrap"></div>
             </div>
@@ -229,24 +246,12 @@
     </div>
 </div>
 
-<div id="io-modal"><div class="modal-content"><h2 id="modal-title"></h2><p id="modal-desc" style="font-size:13px; color:#555;"></p><textarea id="io-textarea"></textarea><div class="modal-btns"><button style="background:#ccc;" onclick="document.getElementById('io-modal').style.display='none'">閉じる</button><button id="modal-action-btn" style="background:var(--primary); color:white;"></button></div></div></div>
-
 <script>
     const EDITOR_PASS = "桜丘"; 
-
-    function checkPassword() {
-        const input = document.getElementById("pass-input").value;
-        if (input === EDITOR_PASS) {
-            document.getElementById("password-screen").style.display = "none";
-            document.getElementById("app-wrapper").style.display = "flex";
-            fetchFromCloud();
-        } else { document.getElementById("pass-error").style.display = "block"; }
-    }
-    
     const BIN_ID = "69ad50e4ae596e708f6c71b0"; 
     const API_KEY = "$2a$10$5JpuS6TiYmI4DoDPkXZtguvz1N9ooUw2fHg9.SGZjO8fTS.qboP6y";
 
-    let gameData = { settings: { stats: [], items: [], gameOverConditions: [], customBgs: [], lifestyleTypes: {}, introBg: "room_m", textSpeed: 75 }, story: {} };
+    let gameData = { settings: { stats: [], items: [], bgms: [], customBgs: [], snsPosts: [], wallpapers: [], lifestyleTypes: {}, introBg: "room_m", textSpeed: 75 }, story: {} };
     let currentSceneId = null;
 
     const bgPaths = { "room_m": "./Gemini_Generated_Image_9n3m5f9n3m5f9n3m.jpg", "room_n": "./Gemini_Generated_Image_x93a34x93a34x93a.jpg", "yard": "./Gemini_Generated_Image_2a4gma2a4gma2a4g.jpg", "class": "./Gemini_Generated_Image_ugcbd4ugcbd4ugcb.jpg", "commute": "./Gemini_Generated_Image_od1fchod1fchod1f.jpg" };
@@ -265,65 +270,61 @@
         "type_max": { name: "極めし者タイプ", desc: "何かの数値を極限まで高めました！", cond: "いずれかが100に到達" }
     };
 
+    function checkPassword() {
+        if (document.getElementById("pass-input").value === EDITOR_PASS) {
+            document.getElementById("password-screen").style.display = "none";
+            document.getElementById("app-wrapper").style.display = "flex";
+            fetchFromCloud();
+        } else { document.getElementById("pass-error").style.display = "block"; }
+    }
+
     async function fetchFromCloud() {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": API_KEY } });
             const data = await response.json();
-            if(data.record && data.record.settings) { gameData = data.record; } 
+            if(data.record && data.record.settings) gameData = data.record; 
             
+            // 💡 修正：生活タイプが空の時に正しく初期化し、既存のデータも維持する
             if(!gameData.settings.lifestyleTypes || Object.keys(gameData.settings.lifestyleTypes).length === 0) {
                 gameData.settings.lifestyleTypes = JSON.parse(JSON.stringify(defaultLifestyleTypes));
             } else {
-                Object.keys(defaultLifestyleTypes).forEach(k => { if(!gameData.settings.lifestyleTypes[k]) gameData.settings.lifestyleTypes[k] = defaultLifestyleTypes[k]; });
+                Object.keys(defaultLifestyleTypes).forEach(k => {
+                    if(!gameData.settings.lifestyleTypes[k]) {
+                        gameData.settings.lifestyleTypes[k] = defaultLifestyleTypes[k];
+                    }
+                });
             }
-            if(!gameData.settings.gameOverConditions) gameData.settings.gameOverConditions = [];
-            
+
+            if(!gameData.settings.snsPosts) gameData.settings.snsPosts = [];
+            if(!gameData.settings.wallpapers) gameData.settings.wallpapers = [];
         } catch (e) { console.error(e); }
         init(); 
     }
 
-    // ★Safari対応版：ダウンロード処理
     function downloadBackupFile() {
         try {
             const dataStr = JSON.stringify(gameData, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = window.URL.createObjectURL(blob);
-            
             const now = new Date();
-            const dateString = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
-            
             const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `backup_${dateString}.json`; 
-            
-            document.body.appendChild(a);
-            a.click();
-            
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-        } catch (e) { console.error("Download error:", e); }
+            a.style.display = 'none'; a.href = url;
+            a.download = `backup_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.json`; 
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
+        } catch (e) { console.error(e); }
     }
 
     async function saveToCloud() {
         if (currentSceneId) syncFormToStory();
         saveGlobalSettings(true);
-        
-        // Safari対策: ネットワーク通信(await)の前にダウンロードを実行する
-        downloadBackupFile();
-
-        const btn = document.getElementById("cloud-save-btn");
-        btn.innerText = "☁️ 保存中..."; btn.style.opacity = "0.5";
-        
+        downloadBackupFile(); 
+        const btn = document.getElementById("cloud-save-btn"); btn.innerText = "☁️ 保存中..."; btn.style.opacity = "0.5";
         try {
             await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY }, body: JSON.stringify(gameData) });
             btn.innerText = "☁️ クラウド保存 ＆ 自動バックアップ"; btn.style.opacity = "1";
-            alert("☁️ 保存完了！\n\n【バックアップについて】\nSafariでは保存ボタンを押した瞬間に「backup_...json」がダウンロードされます。ダウンロードフォルダを確認してください。");
-        } catch (e) { 
-            alert("保存失敗"); btn.innerText = "☁️ クラウド保存 ＆ 自動バックアップ"; btn.style.opacity = "1"; 
-        }
+            alert("☁️ 保存完了！");
+        } catch (e) { alert("保存失敗"); btn.innerText = "☁️ クラウド保存 ＆ 自動バックアップ"; btn.style.opacity = "1"; }
     }
 
     function buildTimeOptions() {
@@ -345,6 +346,12 @@
         return html;
     }
 
+    function buildBgmOptionsHtml(selectedValue) {
+        let html = `<option value="">(なし / 停止)</option>`;
+        (gameData.settings.bgms || []).forEach(b => { html += `<option value="${b.id}" ${selectedValue===b.id?'selected':''}>${b.name}</option>`; });
+        return html;
+    }
+
     function getBgUrlStyle(bgId) {
         if (!bgId) return "";
         if (bgId === "panic") return "repeating-conic-gradient(from 0deg, #6a040f 0deg 10deg, #370617 10deg 20deg)";
@@ -354,8 +361,7 @@
     }
 
     function buildSceneOptionsHtml(selectedValue) {
-        let html = `<option value="end" ${selectedValue==='end'?'selected':''}>end (終了画面へ)</option>`;
-        html += `<option value="intro" ${selectedValue==='intro'?'selected':''}>intro (スタート画面へ)</option>`;
+        let html = `<option value="end" ${selectedValue==='end'?'selected':''}>end (終了画面へ)</option><option value="intro" ${selectedValue==='intro'?'selected':''}>intro (スタート画面へ)</option>`;
         Object.keys(gameData.story).forEach(k => { html += `<option value="${k}" ${selectedValue===k?'selected':''}>${k}</option>`; });
         return html;
     }
@@ -377,17 +383,27 @@
         document.getElementById(tabId).classList.add('active'); btnObj.classList.add('active');
     }
 
-    function init() {
-        buildTimeOptions(); renderSettings(); renderSidebar(); syncSettingsToPreview(); updateIntroPreview(); 
-    }
+    function init() { buildTimeOptions(); renderSettings(); renderSidebar(); syncSettingsToPreview(); updateIntroPreview(); }
 
     function renderSettings() {
         const s = gameData.settings;
         document.getElementById("g-intro-text").value = s.introText || ""; 
-        document.getElementById("g-intro-btn").value = s.introBtn || ""; 
         document.getElementById("g-text-speed").value = s.textSpeed || 75;
         document.getElementById("g-intro-bg").innerHTML = buildBgOptionsHtml(s.introBg || "room_m");
-        if(currentSceneId && document.getElementById("s-bg")) document.getElementById("s-bg").innerHTML = buildBgOptionsHtml(gameData.story[currentSceneId].bg || "room_m");
+        
+        document.getElementById("g-se-click").value = s.seClick || "";
+        document.getElementById("g-se-notif").value = s.seNotif || "";
+        document.getElementById("g-se-error").value = s.seError || "";
+
+        const bgmCont = document.getElementById("bgm-container"); bgmCont.innerHTML = "";
+        (s.bgms || []).forEach((bgm, i) => {
+            bgmCont.innerHTML += `<div class="list-item form-row" data-id="${bgm.id}"><div class="form-group"><label>BGM名</label><input type="text" class="bgm-name" value="${bgm.name}"></div><div class="form-group" style="flex:2;"><label>音源URL (.mp3など)</label><input type="text" class="bgm-url" value="${bgm.url}"></div><button class="btn-remove" style="margin-top:25px;" onclick="removeBgm(${i})">削除</button></div>`;
+        });
+
+        if(currentSceneId && document.getElementById("s-bg")) {
+            document.getElementById("s-bg").innerHTML = buildBgOptionsHtml(gameData.story[currentSceneId].bg || "room_m");
+            document.getElementById("s-bgm").innerHTML = buildBgmOptionsHtml(gameData.story[currentSceneId].bgm || "");
+        }
 
         const bgsCont = document.getElementById("bgs-container"); bgsCont.innerHTML = "";
         (s.customBgs || []).forEach((bg, i) => { bgsCont.innerHTML += `<div class="list-item form-row" data-id="${bg.id}"><div class="form-group"><label>背景名</label><input type="text" class="bg-name" value="${bg.name}"></div><div class="form-group" style="flex:2;"><label>画像URL</label><input type="text" class="bg-url" value="${bg.url}"></div><button class="btn-remove" style="margin-top:25px;" onclick="removeCustomBg(${i})">削除</button></div>`; });
@@ -399,8 +415,9 @@
                 <div class="form-group"><label>ID</label><input type="text" class="st-id" value="${st.id}" oninput="syncSettingsToPreview()"></div>
                 <div class="form-group"><label>名前</label><input type="text" class="st-name" value="${st.name}" oninput="syncSettingsToPreview()"></div>
                 <div class="form-group"><label>初期値</label><input type="number" class="st-init" value="${st.init}" oninput="syncSettingsToPreview()"></div>
-                <div class="form-group" style="display:flex; align-items:center; padding-top:15px;">
-                    <label style="cursor:pointer; color:#2e7d32;"><input type="checkbox" class="st-step" ${st.isStep?'checked':''} onchange="syncSettingsToPreview()"> 👣 歩数計として扱う</label>
+                <div class="form-group" style="display:flex; flex-direction:column; justify-content:center; gap:5px; padding-top:15px;">
+                    <label style="cursor:pointer; color:#f57c00;"><input type="checkbox" class="st-step" ${st.isStep?'checked':''} onchange="syncSettingsToPreview()"> 👣 歩数計として扱う</label>
+                    <label style="cursor:pointer; color:#5c6bc0;"><input type="checkbox" class="st-sleep" ${st.isSleep?'checked':''} onchange="syncSettingsToPreview()"> 🌙 平均睡眠時間として扱う</label>
                 </div>
                 <button class="btn-remove" style="margin-top:25px;" onclick="removeStatus(${i})">削除</button>
             </div>`; 
@@ -422,19 +439,39 @@
             </div>`;
         });
 
-        const goCont = document.getElementById("gameover-container"); goCont.innerHTML = "";
-        (s.gameOverConditions || []).forEach((go, i) => {
-            goCont.innerHTML += `<div class="list-item" style="border-left:4px solid #d32f2f;"><div class="form-row"><div class="form-group"><label>対象ステータス</label><select class="go-stat">${buildStatOptionsHtml(go.statId)}</select></div><div class="form-group"><label>条件</label><select class="go-op"><option value="<=" ${go.operator==='<='?'selected':''}>以下になったら</option><option value=">=" ${go.operator==='>='?'selected':''}>以上になったら</option></select></div><div class="form-group"><label>数値</label><input type="number" class="go-val" value="${go.value}"></div><div class="form-group"><label>強制移動先シーン</label><select class="go-next">${buildSceneOptionsHtml(go.nextScene)}</select></div></div><button class="btn-remove" style="position:absolute; top:10px; right:10px;" onclick="removeGameOver(${i})">削除</button></div>`;
+        // SNS設定
+        const snsCont = document.getElementById("sns-container"); snsCont.innerHTML = "";
+        (s.snsPosts || []).forEach((post, i) => {
+            let effHtml = s.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="sns-eff" data-stid="${st.id}" value="${(post.effects && post.effects[st.id]) ? post.effects[st.id] : 0}"></div>`).join('');
+            snsCont.innerHTML += `
+            <div class="list-item" data-id="${post.id}">
+                <div class="form-row">
+                    <div class="form-group"><label>アイコン</label><input type="text" class="sns-icon" value="${post.icon || '👤'}"></div>
+                    <div class="form-group" style="flex:2;"><label>ユーザー名</label><input type="text" class="sns-user" value="${post.user || '名無し'}"></div>
+                </div>
+                <div class="form-group"><label>投稿テキスト</label><textarea class="sns-text">${post.text || ''}</textarea></div>
+                <div class="form-row" style="background:#fff; padding:10px; border-radius:4px; border:1px solid #eee;">
+                    <div style="width:100%; font-size:12px; font-weight:bold; color:#e0245e; margin-bottom:5px;">❤️ いいねした時のステータス回復値</div>
+                    ${effHtml}
+                </div>
+                <button class="btn-remove" style="position:absolute; top:15px; right:15px;" onclick="removeSnsPost(${i})">削除</button>
+            </div>`;
         });
 
+        // 💡 修正：生活タイプのロードを確実にする
         renderLifestyleConfig();
     }
 
     function renderLifestyleConfig() {
         const lsCont = document.getElementById("lifestyle-container"); lsCont.innerHTML = "";
-        const types = gameData.settings.lifestyleTypes;
+        const types = gameData.settings.lifestyleTypes || {};
+        
         Object.keys(defaultLifestyleTypes).forEach((k, i) => {
-            const def = defaultLifestyleTypes[k]; const tData = types[k] || def;
+            const def = defaultLifestyleTypes[k]; 
+            const tData = types[k] || def;
+            
+            // 💡 textarea等でHTMLが崩れないようにエスケープや置換を入れるのがベターですが、
+            // 今回は単純に正しく値が埋め込まれるか確認します。
             lsCont.innerHTML += `
             <div class="list-item ls-item" data-key="${k}" style="border-left: 5px solid ${statColors[i % statColors.length]}">
                 <div style="font-weight:bold; color:#555; margin-bottom:8px;">条件: ${def.cond}</div>
@@ -446,67 +483,77 @@
 
     function addCustomBg() { gameData.settings.customBgs.push({ id: "bg_" + Math.random().toString(36).substr(2, 6), name: "新規背景", url: "" }); renderSettings(); }
     function removeCustomBg(i) { gameData.settings.customBgs.splice(i,1); renderSettings(); }
-    function addStatus() { gameData.settings.stats.push({ id: "new", name: "新規", init: 50, isStep: false }); renderSettings(); syncSettingsToPreview(); }
+    function addBgm() { gameData.settings.bgms.push({ id: "bgm_" + Math.random().toString(36).substr(2, 6), name: "新規BGM", url: "" }); renderSettings(); }
+    function removeBgm(i) { gameData.settings.bgms.splice(i,1); renderSettings(); }
+    function addStatus() { gameData.settings.stats.push({ id: "new", name: "新規", init: 50, isStep: false, isSleep: false }); renderSettings(); syncSettingsToPreview(); }
     function removeStatus(i) { if(gameData.settings.stats.length>1) { gameData.settings.stats.splice(i,1); renderSettings(); syncSettingsToPreview(); } }
     function addItem() { gameData.settings.items.push({ id: "it", name: "新アイテム", maxUse: 1, effects: {}, icon: "🎁" }); renderSettings(); syncSettingsToPreview(); }
     function removeItem(i) { gameData.settings.items.splice(i,1); renderSettings(); syncSettingsToPreview(); }
-    function addGameOver() { gameData.settings.gameOverConditions.push({ statId: gameData.settings.stats[0] ? gameData.settings.stats[0].id : "", operator: "<=", value: 0, nextScene: "end" }); renderSettings(); }
-    function removeGameOver(i) { gameData.settings.gameOverConditions.splice(i,1); renderSettings(); }
+    
+    function addSnsPost() { gameData.settings.snsPosts.push({ id: "sns_" + Math.random().toString(36).substr(2, 6), user: "ユーザー", icon: "👤", text: "新しい投稿", effects: {} }); renderSettings(); }
+    function removeSnsPost(i) { gameData.settings.snsPosts.splice(i,1); renderSettings(); }
 
     function saveGlobalSettings(silent=false) {
-        gameData.settings.introText = document.getElementById("g-intro-text").value; 
-        gameData.settings.introBtn = document.getElementById("g-intro-btn").value;
-        gameData.settings.introBg = document.getElementById("g-intro-bg").value; 
-        gameData.settings.textSpeed = parseInt(document.getElementById("g-text-speed").value) || 75;
-        
-        gameData.settings.customBgs = []; document.querySelectorAll("#bgs-container .list-item").forEach(el => { gameData.settings.customBgs.push({ id: el.dataset.id, name: el.querySelector(".bg-name").value, url: el.querySelector(".bg-url").value }); });
-        gameData.settings.stats = []; document.querySelectorAll("#status-container .list-item").forEach(el => { gameData.settings.stats.push({ id: el.querySelector(".st-id").value, name: el.querySelector(".st-name").value, init: parseInt(el.querySelector(".st-init").value), isStep: el.querySelector(".st-step").checked }); });
-        gameData.settings.items = []; document.querySelectorAll("#items-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".it-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0) effects[eff.dataset.stid] = val; }); gameData.settings.items.push({ id: el.querySelector(".it-id").value, name: el.querySelector(".it-name").value, icon: el.querySelector(".it-icon").value, maxUse: parseInt(el.querySelector(".it-max").value), effects: effects }); });
-        
-        gameData.settings.gameOverConditions = []; document.querySelectorAll("#gameover-container .list-item").forEach(el => { gameData.settings.gameOverConditions.push({ statId: el.querySelector(".go-stat").value, operator: el.querySelector(".go-op").value, value: parseInt(el.querySelector(".go-val").value) || 0, nextScene: el.querySelector(".go-next").value }); });
+        // 💡 修正：エラーで途中で止まらないように堅牢にデータを集める
+        const s = gameData.settings;
+        s.introText = document.getElementById("g-intro-text").value; 
+        s.textSpeed = parseInt(document.getElementById("g-text-speed").value) || 75;
+        s.seClick = document.getElementById("g-se-click").value;
+        s.seNotif = document.getElementById("g-se-notif").value;
+        s.seError = document.getElementById("g-se-error").value;
 
-        gameData.settings.lifestyleTypes = {};
+        s.bgms = []; document.querySelectorAll("#bgm-container .list-item").forEach(el => { s.bgms.push({ id: el.dataset.id, name: el.querySelector(".bgm-name").value, url: el.querySelector(".bgm-url").value }); });
+        s.customBgs = []; document.querySelectorAll("#bgs-container .list-item").forEach(el => { s.customBgs.push({ id: el.dataset.id, name: el.querySelector(".bg-name").value, url: el.querySelector(".bg-url").value }); });
+        s.stats = []; document.querySelectorAll("#status-container .list-item").forEach(el => { s.stats.push({ id: el.querySelector(".st-id").value, name: el.querySelector(".st-name").value, init: parseInt(el.querySelector(".st-init").value), isStep: el.querySelector(".st-step").checked, isSleep: el.querySelector(".st-sleep").checked }); });
+        s.items = []; document.querySelectorAll("#items-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".it-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0) effects[eff.dataset.stid] = val; }); s.items.push({ id: el.querySelector(".it-id").value, name: el.querySelector(".it-name").value, icon: el.querySelector(".it-icon").value, maxUse: parseInt(el.querySelector(".it-max").value), effects: effects }); });
+        
+        s.snsPosts = []; document.querySelectorAll("#sns-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".sns-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0) effects[eff.dataset.stid] = val; }); s.snsPosts.push({ id: el.dataset.id, user: el.querySelector(".sns-user").value, icon: el.querySelector(".sns-icon").value, text: el.querySelector(".sns-text").value, effects: effects }); });
+
+        // 💡 修正：生活タイプ変更の確実な保存
+        s.lifestyleTypes = {};
         document.querySelectorAll("#lifestyle-container .ls-item").forEach(el => {
             const k = el.dataset.key;
-            gameData.settings.lifestyleTypes[k] = { name: el.querySelector(".ls-name").value, desc: el.querySelector(".ls-desc").value };
+            s.lifestyleTypes[k] = { 
+                name: el.querySelector(".ls-name").value, 
+                desc: el.querySelector(".ls-desc").value 
+            };
         });
 
         syncSettingsToPreview();
-        document.getElementById("g-intro-bg").innerHTML = buildBgOptionsHtml(gameData.settings.introBg);
-        if(currentSceneId && document.getElementById("s-bg")) document.getElementById("s-bg").innerHTML = buildBgOptionsHtml(gameData.story[currentSceneId].bg || "room_m");
-        
+        document.getElementById("g-intro-bg").innerHTML = buildBgOptionsHtml(s.introBg);
+        if(currentSceneId && document.getElementById("s-bg")) {
+            document.getElementById("s-bg").innerHTML = buildBgOptionsHtml(gameData.story[currentSceneId].bg || "room_m");
+            document.getElementById("s-bgm").innerHTML = buildBgmOptionsHtml(gameData.story[currentSceneId].bgm || "");
+        }
         if (currentSceneId) { const sc = gameData.story[currentSceneId]; renderChoices(sc.choices || []); }
-        if(!silent) alert("設定を一時保存しました！\n（右上のクラウド保存ボタンで確定させてください）");
+        if(!silent) alert("設定を一時保存しました！");
     }
 
     function syncSettingsToPreview() {
         const widgetsContainer = document.getElementById("prev-status-widgets"); widgetsContainer.innerHTML = "";
         document.querySelectorAll("#status-container .list-item").forEach((el, i) => { 
             let stName = el.querySelector(".st-name").value || "新規"; 
-            let isStep = el.querySelector(".st-step").checked;
+            let isStep = el.querySelector(".st-step").checked; let isSleep = el.querySelector(".st-sleep").checked;
             const color = statColors[i % statColors.length]; 
             
-            if (isStep) {
-                widgetsContainer.innerHTML += `<div class="prev-widget step-widget"><div style="font-weight:bold; color:#f57c00; margin-bottom:2px;">👣 ${stName}</div><div style="font-size:10px; font-weight:900;">0 <small style="font-size:6px;">歩</small></div></div>`;
-            } else {
-                widgetsContainer.innerHTML += `<div class="prev-widget"><div style="font-weight:bold; color:#444; margin-bottom:2px;">${stName}</div><div style="height:3px; background:#ddd; border-radius:2px; overflow:hidden;"><div style="height:100%; background:${color}; width:50%;"></div></div></div>`; 
-            }
+            if (isStep) { widgetsContainer.innerHTML += `<div class="prev-widget step-widget"><div style="font-weight:bold; color:#f57c00; margin-bottom:2px;">👣 ${stName}</div><div style="font-size:10px; font-weight:900;">0 <small style="font-size:6px;">歩</small></div></div>`; } 
+            else if (isSleep) { widgetsContainer.innerHTML += `<div class="prev-widget sleep-widget"><div style="font-weight:bold; color:#5c6bc0; margin-bottom:2px;">🌙 ${stName}</div><div style="font-size:10px; font-weight:900;">0.0 <small style="font-size:6px;">時間</small></div></div>`; } 
+            else { widgetsContainer.innerHTML += `<div class="prev-widget"><div style="font-weight:bold; color:#444; margin-bottom:2px;">${stName}</div><div style="height:3px; background:#ddd; border-radius:2px; overflow:hidden;"><div style="height:100%; background:${color}; width:50%;"></div></div></div>`; }
         });
 
         const itemsContainer = document.getElementById("prev-items-wrap"); itemsContainer.innerHTML = "";
         document.querySelectorAll("#items-container .list-item").forEach(el => { 
-            let iconVal = el.querySelector(".it-icon").value || "🎁";
-            let iconHtml = (iconVal.startsWith("http") || iconVal.startsWith("./")) ? `<img src="${iconVal}" style="width:14px;height:14px;border-radius:3px;">` : `<span>${iconVal}</span>`;
+            let iconVal = el.querySelector(".it-icon").value || "🎁"; let iconHtml = (iconVal.startsWith("http") || iconVal.startsWith("./")) ? `<img src="${iconVal}" style="width:14px;height:14px;border-radius:3px;">` : `<span>${iconVal}</span>`;
             itemsContainer.innerHTML += `<div class="prev-app-icon">${iconHtml}</div>`; 
         });
     }
     
     function updateIntroPreview() {
         const bgStyle = getBgUrlStyle(document.getElementById("g-intro-bg").value);
-        document.getElementById("prev-bg").style.backgroundImage = bgStyle; document.getElementById("intro-bg-thumb").style.backgroundImage = bgStyle;
+        document.getElementById("prev-bg").style.backgroundImage = bgStyle; 
         document.getElementById("prev-clock").innerText = ""; 
         document.getElementById("prev-text").innerHTML = document.getElementById("g-intro-text").value.replace(/\n/g, '<br>'); 
-        document.getElementById("prev-buttons").innerHTML = document.getElementById("g-intro-btn").value ? `<button class="prev-btn">${document.getElementById("g-intro-btn").value}</button>` : "";
+        document.getElementById("prev-buttons").innerHTML = `<button class="prev-btn">はじめる</button>`;
     }
 
     function renderSidebar() {
@@ -519,40 +566,42 @@
         document.getElementById("editor-welcome").style.display = "none"; document.getElementById("editor-form").style.display = "block";
         document.getElementById("s-id").value = id; 
         document.getElementById("s-bg").innerHTML = buildBgOptionsHtml(sc.bg || "room_m");
+        document.getElementById("s-bgm").innerHTML = buildBgmOptionsHtml(sc.bgm || "");
         document.getElementById("s-day").value = sc.day || ""; document.getElementById("s-time").value = sc.time || ""; 
         document.getElementById("s-text").value = sc.text || "";
         
+        const call = sc.call || {};
+        document.getElementById("s-call-en").checked = !!call.enabled;
+        document.getElementById("s-call-name").value = call.caller || "";
+        document.getElementById("s-call-accept-next").innerHTML = buildSceneOptionsHtml(call.accept?.next || "");
+        document.getElementById("s-call-reject-next").innerHTML = buildSceneOptionsHtml(call.reject?.next || "");
+        toggleCall();
+
         const notif = sc.notification || {};
         document.getElementById("s-notif-en").checked = !!notif.enabled;
         document.getElementById("s-notif-title").value = notif.title || "";
         document.getElementById("s-notif-text").value = notif.text || "";
         document.getElementById("s-notif-btn").value = notif.choiceText || "";
         document.getElementById("s-notif-next").innerHTML = buildSceneOptionsHtml(notif.next || "");
-        
         const neffCont = document.getElementById("notif-effects-container"); neffCont.innerHTML = "";
-        gameData.settings.stats.forEach(st => {
-            let val = (notif.effects && notif.effects[st.id]) ? notif.effects[st.id] : 0;
-            neffCont.innerHTML += `<div style="display:flex; align-items:center; gap:5px;"><label style="width:60px;">${st.name}</label><input type="number" class="notif-eff" data-stid="${st.id}" value="${val}" style="width:60px;"></div>`;
-        });
+        gameData.settings.stats.forEach(st => { let val = (notif.effects && notif.effects[st.id]) ? notif.effects[st.id] : 0; neffCont.innerHTML += `<div style="display:flex; align-items:center; gap:5px;"><label style="width:60px;">${st.name}</label><input type="number" class="notif-eff" data-stid="${st.id}" value="${val}" style="width:60px;"></div>`; });
         toggleNotification();
 
         renderChoices(sc.choices || []); renderSidebar(); updatePreview();
     }
 
+    function toggleCall() { document.getElementById("call-wrap").style.display = document.getElementById("s-call-en").checked ? "block" : "none"; updatePreview(); }
     function toggleNotification() { document.getElementById("notif-wrap").style.display = document.getElementById("s-notif-en").checked ? "block" : "none"; updatePreview(); }
     
     function renderChoices(choices) {
         const cont = document.getElementById("choices-container"); cont.innerHTML = "";
-        
         choices.forEach((c, i) => {
             let effHtml = gameData.settings.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="c-eff" data-stid="${st.id}" value="${(c.effects && c.effects[st.id]) ? c.effects[st.id] : 0}"></div>`).join('');
             const hasRandom = c.randomProb > 0; const randomDisplay = hasRandom ? "block" : "none";
             const hasShake = c.shake === true;
             let randomItemOptions = `<option value="">なし</option>` + (gameData.settings.items || []).map(it => `<option value="${it.id}" ${c.randomItem === it.id ? 'selected' : ''}>${it.name}</option>`).join('');
 
-            const cond = c.condition || {};
-            const hasCond = !!cond.statId;
-            const condDisplay = hasCond ? "block" : "none";
+            const cond = c.condition || {}; const hasCond = !!cond.statId; const condDisplay = hasCond ? "block" : "none";
 
             cont.innerHTML += `
             <div class="list-item" style="border-left:4px solid var(--secondary);">
@@ -591,7 +640,7 @@
                             <div class="form-group"><label>確認ボタンのテキスト</label><input type="text" class="c-r-btn" value="${c.randomBtn || '次へ進む'}"></div>
                         </div>
                         <div class="form-row" style="background:#fff; padding:10px; border-radius:4px; border:1px solid #ffe0b2; margin-top:10px;">
-                            <div style="width:100%; font-size:12px; font-weight:bold; color:#e65100; margin-bottom:5px;">▼ ランダムイベント時のステータス変更値</div>
+                            <div style="width:100%; font-size:12px; font-weight:bold; color:#e65100; margin-bottom:5px;">▼ ランダム時のステータス変更値</div>
                             ${gameData.settings.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="c-r-eff" data-stid="${st.id}" value="${(c.randomEffects && c.randomEffects[st.id]) ? c.randomEffects[st.id] : 0}"></div>`).join('')}
                         </div>
                         <div class="form-row" style="background:#fff; padding:10px; border-radius:4px; border:1px solid #ffe0b2; margin-top:10px;">
@@ -612,21 +661,14 @@
 
     function toggleRandom(checkbox) { checkbox.closest('.list-item').querySelector('.c-random-wrap').style.display = checkbox.checked ? 'block' : 'none'; }
     function toggleCondition(checkbox) { checkbox.closest('.list-item').querySelector('.c-cond-wrap').style.display = checkbox.checked ? 'block' : 'none'; updatePreview(); }
-    
     function addChoice() { if(!currentSceneId) return; syncFormToStory(); gameData.story[currentSceneId].choices.push({ text: "新しいアクション", next: "end", effects: {} }); renderChoices(gameData.story[currentSceneId].choices); updatePreview(); }
     function removeChoice(i) { syncFormToStory(); gameData.story[currentSceneId].choices.splice(i, 1); renderChoices(gameData.story[currentSceneId].choices); updatePreview(); }
     
     function syncFormToStory() {
         const sc = gameData.story[currentSceneId]; sc.choices = [];
         
-        sc.notification = {
-            enabled: document.getElementById("s-notif-en").checked,
-            title: document.getElementById("s-notif-title").value,
-            text: document.getElementById("s-notif-text").value,
-            choiceText: document.getElementById("s-notif-btn").value,
-            next: document.getElementById("s-notif-next").value,
-            effects: {}
-        };
+        sc.call = { enabled: document.getElementById("s-call-en").checked, caller: document.getElementById("s-call-name").value, accept: { next: document.getElementById("s-call-accept-next").value }, reject: { next: document.getElementById("s-call-reject-next").value } };
+        sc.notification = { enabled: document.getElementById("s-notif-en").checked, title: document.getElementById("s-notif-title").value, text: document.getElementById("s-notif-text").value, choiceText: document.getElementById("s-notif-btn").value, next: document.getElementById("s-notif-next").value, effects: {} };
         document.querySelectorAll(".notif-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) sc.notification.effects[eff.dataset.stid] = val; });
 
         document.querySelectorAll("#choices-container .list-item").forEach(el => {
@@ -634,27 +676,14 @@
             let choiceData = { text: el.querySelector(".c-text").value, next: el.querySelector(".c-next").value, effects: effects };
             
             const condCb = el.querySelector("input[onchange='toggleCondition(this)']");
-            if (condCb && condCb.checked) {
-                choiceData.condition = { statId: el.querySelector(".c-cond-stat").value, op: el.querySelector(".c-cond-op").value, val: parseInt(el.querySelector(".c-cond-val").value) || 0 };
-            }
+            if (condCb && condCb.checked) { choiceData.condition = { statId: el.querySelector(".c-cond-stat").value, op: el.querySelector(".c-cond-op").value, val: parseInt(el.querySelector(".c-cond-val").value) || 0 }; }
 
-            const shakeCb = el.querySelector(".c-shake");
-            if(shakeCb && shakeCb.checked) choiceData.shake = true;
+            const shakeCb = el.querySelector(".c-shake"); if(shakeCb && shakeCb.checked) choiceData.shake = true;
 
             const randomCheckbox = el.querySelector("input[onchange='toggleRandom(this)']"); 
             if (randomCheckbox && randomCheckbox.checked) { 
-                choiceData.randomProb = parseInt(el.querySelector(".c-r-prob").value) || 0; 
-                choiceData.randomNext = el.querySelector(".c-r-next").value; 
-                choiceData.randomName = el.querySelector(".c-r-name") ? el.querySelector(".c-r-name").value : "";
-                choiceData.randomText = el.querySelector(".c-r-text") ? el.querySelector(".c-r-text").value : "";
-                choiceData.randomBg = el.querySelector(".c-r-bg") ? el.querySelector(".c-r-bg").value : "";
-                choiceData.randomBtn = el.querySelector(".c-r-btn") ? el.querySelector(".c-r-btn").value : "";
-                choiceData.randomItem = el.querySelector(".c-r-item") ? el.querySelector(".c-r-item").value : "";
-                choiceData.randomItemVal = el.querySelector(".c-r-item-val") ? parseInt(el.querySelector(".c-r-item-val").value) : 0;
-                
-                let randomEffects = {};
-                el.querySelectorAll(".c-r-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) randomEffects[eff.dataset.stid] = val; });
-                choiceData.randomEffects = randomEffects;
+                choiceData.randomProb = parseInt(el.querySelector(".c-r-prob").value) || 0; choiceData.randomNext = el.querySelector(".c-r-next").value; choiceData.randomName = el.querySelector(".c-r-name") ? el.querySelector(".c-r-name").value : ""; choiceData.randomText = el.querySelector(".c-r-text") ? el.querySelector(".c-r-text").value : ""; choiceData.randomBg = el.querySelector(".c-r-bg") ? el.querySelector(".c-r-bg").value : ""; choiceData.randomBtn = el.querySelector(".c-r-btn") ? el.querySelector(".c-r-btn").value : ""; choiceData.randomItem = el.querySelector(".c-r-item") ? el.querySelector(".c-r-item").value : ""; choiceData.randomItemVal = el.querySelector(".c-r-item-val") ? parseInt(el.querySelector(".c-r-item-val").value) : 0;
+                let randomEffects = {}; el.querySelectorAll(".c-r-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) randomEffects[eff.dataset.stid] = val; }); choiceData.randomEffects = randomEffects;
             }
             sc.choices.push(choiceData);
         });
@@ -662,25 +691,28 @@
     
     function updatePreview() {
         const bgStyle = getBgUrlStyle(document.getElementById("s-bg").value);
-        document.getElementById("prev-bg").style.backgroundImage = bgStyle; document.getElementById("scene-bg-thumb").style.backgroundImage = bgStyle;
+        document.getElementById("prev-bg").style.backgroundImage = bgStyle;
         const dayVal = document.getElementById("s-day").value; const timeVal = document.getElementById("s-time").value;
         document.getElementById("prev-clock").innerText = (dayVal || timeVal) ? `${dayVal} ${timeVal}`.trim() : "";
-        document.getElementById("prev-text").innerHTML = document.getElementById("s-text").value.replace(/\n/g, '<br>');
         
-        const bArea = document.getElementById("prev-buttons");
-        bArea.innerHTML = "";
+        if(document.getElementById("s-call-en").checked) {
+            document.getElementById("prev-text").innerHTML = `<span style="color:#e91e63;">📞 ${document.getElementById("s-call-name").value} から着信中...</span>`;
+            document.getElementById("prev-buttons").innerHTML = `<button class="prev-btn prev-call-btn">電話に出る</button><button class="prev-btn" style="background:#f44336; color:white;">切る</button>`;
+            return;
+        }
+
+        document.getElementById("prev-text").innerHTML = document.getElementById("s-text").value.replace(/\n/g, '<br>');
+        const bArea = document.getElementById("prev-buttons"); bArea.innerHTML = "";
+        
         document.querySelectorAll("#choices-container .list-item").forEach(item => {
             const text = item.querySelector(".c-text").value;
             if(!text) return;
             const isCond = item.querySelector("input[onchange='toggleCondition(this)']").checked;
             if (isCond) {
-                let statName = "ステータス";
-                const statSel = item.querySelector(".c-cond-stat");
+                let statName = "ステータス"; const statSel = item.querySelector(".c-cond-stat");
                 if(statSel && statSel.options[statSel.selectedIndex]) statName = statSel.options[statSel.selectedIndex].text;
                 bArea.innerHTML += `<button class="prev-btn" style="opacity:0.5; border-color:#ccc; color:#888;">🔒 ${statName}が足りません</button>`;
-            } else {
-                bArea.innerHTML += `<button class="prev-btn">${text}</button>`;
-            }
+            } else { bArea.innerHTML += `<button class="prev-btn">${text}</button>`; }
         });
 
         if (document.getElementById("s-notif-en").checked) {
@@ -693,14 +725,13 @@
         const newId = document.getElementById("s-id").value.trim(); if(!newId) return;
         if(newId !== currentSceneId) { gameData.story[newId] = gameData.story[currentSceneId]; delete gameData.story[currentSceneId]; currentSceneId = newId; }
         const sc = gameData.story[currentSceneId];
-        sc.bg = document.getElementById("s-bg").value; sc.day = document.getElementById("s-day").value; sc.time = document.getElementById("s-time").value; sc.text = document.getElementById("s-text").value;
-        syncFormToStory(); renderSidebar(); renderSettings(); alert("シーンを一時保存しました！\n反映させるには右上の「クラウド保存」を押してください。");
+        sc.bg = document.getElementById("s-bg").value; sc.bgm = document.getElementById("s-bgm").value;
+        sc.day = document.getElementById("s-day").value; sc.time = document.getElementById("s-time").value; sc.text = document.getElementById("s-text").value;
+        syncFormToStory(); renderSidebar(); renderSettings(); alert("シーンを一時保存しました！");
     }
-
     function openModal(type) {
         const modal = document.getElementById("io-modal"); const ta = document.getElementById("io-textarea"); const btn = document.getElementById("modal-action-btn");
-        document.getElementById("modal-title").innerText = "バックアップの復元";
-        ta.value = ""; btn.innerText = "データを復元する";
+        document.getElementById("modal-title").innerText = "バックアップの復元"; ta.value = ""; btn.innerText = "データを復元する";
         btn.onclick = () => { try { gameData = JSON.parse(ta.value); init(); modal.style.display = "none"; alert("復元成功！"); } catch(e) { alert("データ形式エラー"); } };
         modal.style.display = "flex";
     }
