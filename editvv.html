@@ -176,21 +176,29 @@
 
             <div id="sub-status" class="sub-tab-content card">
                 <h2>📊 ステータス設定 <button class="btn-add" onclick="addStatus()">+ 追加</button></h2>
+                <p style="font-size:12px; color:#666;">※睡眠時間が4時間未満になると視界がぼやけます。<br>※その他のステータスが15以下になると画面にノイズが走ります。</p>
                 <div id="status-container"></div>
             </div>
 
             <div id="sub-item" class="sub-tab-content card">
                 <h2>🥫 アイテム・アプリ設定 <button class="btn-add" onclick="addItem()">+ 追加</button></h2>
+                <p style="font-size:12px; color:#d32f2f; font-weight:bold;">※内部IDを「sns」にするとSNSアプリ、「wallpaper」にすると壁紙変更アプリが開きます。</p>
                 <div id="items-container"></div>
             </div>
 
             <div id="sub-sns" class="sub-tab-content card">
                 <h2>🐦 SNS投稿の設定 <button class="btn-add" onclick="addSnsPost()">+ 追加</button></h2>
+                <div class="form-group" style="width: 200px;">
+                    <label>1回の使用で表示する投稿数</label>
+                    <input type="number" id="g-sns-count" value="3" min="1">
+                </div>
+                <p style="font-size:12px; color:#666;">※アイテムを使用するたびに、以下のリストの中からランダムに抽出されます。</p>
                 <div id="sns-container"></div>
             </div>
 
             <div id="sub-trivia" class="sub-tab-content card">
                 <h2>💡 豆知識設定 <button class="btn-add" onclick="addTrivia()">+ 追加</button></h2>
+                <p style="font-size:12px; color:#666;">スマホ画面内に常時表示されるウィジェットとしてランダム表示されます。</p>
                 <div id="trivia-container"></div>
             </div>
 
@@ -273,11 +281,13 @@
             <div class="card">
                 <h2>🏆 ランキング管理</h2>
                 <p style="font-size:12px; color:#666;">プレイヤーが登録したランキング記録を確認・削除できます。</p>
-                <div id="editor-leaderboard-container" style="background:#f9f9f9; padding:10px; border-radius:5px; max-height:400px; overflow-y:auto; margin-bottom:15px;"></div>
+                <div id="editor-leaderboard-container" style="background:#f9f9f9; padding:10px; border-radius:5px; max-height:400px; overflow-y:auto; margin-bottom:15px;">
+                    </div>
                 <button class="save-btn" style="background:#d32f2f;" onclick="clearAllRanking()">🗑️ すべてのランキング記録を削除する</button>
                 <button class="save-btn" style="margin-top:10px;" onclick="saveRankingToCloud(this)">☁️ ランキングの変更をクラウドに保存</button>
             </div>
         </div></div>
+
     </div>
 
     <div id="preview-area">
@@ -311,7 +321,7 @@
     const BIN_ID = "69ad50e4ae596e708f6c71b0"; 
     const API_KEY = "$2a$10$5JpuS6TiYmI4DoDPkXZtguvz1N9ooUw2fHg9.SGZjO8fTS.qboP6y";
 
-    let gameData = { settings: { stats: [], clubs: [], items: [], bgms: [], customBgs: [], snsPosts: [], wallpapers: [], trivia: [], gameOverConditions: [], lifestyleTypes: {}, introBg: "room_m", introBtn: "はじめる", textSpeed: 75, creditText: "" }, story: {}, leaderboard: [] };
+    let gameData = { settings: { stats: [], clubs: [], items: [], bgms: [], customBgs: [], snsPosts: [], wallpapers: [], trivia: [], gameOverConditions: [], lifestyleTypes: {}, introBg: "room_m", introBtn: "はじめる", textSpeed: 75, creditText: "", snsCount: 3 }, story: {}, leaderboard: [] };
     let currentSceneId = null;
 
     const bgPaths = { 
@@ -482,6 +492,9 @@
         document.getElementById("g-se-click").value = s.seClick || "";
         document.getElementById("g-se-notif").value = s.seNotif || "";
         document.getElementById("g-se-error").value = s.seError || "";
+
+        // ★追加：SNS表示件数の読み込み
+        document.getElementById("g-sns-count").value = s.snsCount || 3;
 
         const bgmCont = document.getElementById("bgm-container"); bgmCont.innerHTML = "";
         (s.bgms || []).forEach((bgm, i) => {
@@ -675,6 +688,9 @@
         s.seClick = document.getElementById("g-se-click").value;
         s.seNotif = document.getElementById("g-se-notif").value;
         s.seError = document.getElementById("g-se-error").value;
+
+        // ★追加：SNS表示件数の保存
+        s.snsCount = parseInt(document.getElementById("g-sns-count").value) || 3;
 
         s.clubs = []; document.querySelectorAll("#clubs-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".club-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) effects[eff.dataset.stid] = val; }); s.clubs.push({ id: el.querySelector(".club-id").value, name: el.querySelector(".club-name").value, en: el.querySelector(".club-en").value, desc: el.querySelector(".club-desc").value, effects: effects }); });
         s.bgms = []; document.querySelectorAll("#bgm-container .list-item").forEach(el => { s.bgms.push({ id: el.dataset.id, name: el.querySelector(".bgm-name").value, url: el.querySelector(".bgm-url").value }); });
