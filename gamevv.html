@@ -712,7 +712,6 @@
             currentLeaderboard = gameData.leaderboard || []; switchRankingTab('all');
         }
 
-        // 💡 修正：ゲームオーバー画面（スコア非表示）の追加
         function showGameOverScreen() {
             document.getElementById("game-wrapper").style.display = "none";
             audioBGM.pause(); playSE('error'); 
@@ -773,8 +772,7 @@
 
         function loadScene(key) {
             if (key === "end") { showResultScreen(); return; }
-            if (key === "gameover") { showGameOverScreen(); return; } // 💡 修正：ゲームオーバーへの移動
-            if (key === "intro") { backToTitle(); return; } 
+            if (key === "gameover") { showGameOverScreen(); return; } 
 
             const sc = gameData.story[key]; if (!sc) return;
 
@@ -1006,7 +1004,6 @@
             if (choice.randomProb && Math.random() * 100 < choice.randomProb) isRandomHit = true;
 
             const checkGameOver = () => {
-                // 💡 修正：gameover への移動も無限ループ判定から除外
                 if (choice.next === "intro" || choice.next === "end" || choice.next === "gameover") return false;
 
                 const goCond = gameData.settings.gameOverConditions.find(go => {
