@@ -424,9 +424,12 @@
             document.getElementById("start-screen").style.display = "none";
             
             document.getElementById("res-title").innerText = "🏆 ランキング";
+            document.getElementById("res-title").style.color = "#ffca28";
             document.getElementById("res-score-area").style.display = "none";
             document.getElementById("submit-area").style.display = "none";
             document.getElementById("tab-rank-type").style.display = "none";
+            document.getElementById("tab-rank-all").style.display = "inline-block";
+            document.getElementById("leaderboard-container").style.display = "block";
             
             const backBtn = document.getElementById("btn-back-title");
             backBtn.innerText = "戻る";
@@ -503,8 +506,8 @@
                 let maxVal = st.max !== undefined ? st.max : 100;
                 startVal = Math.min(startVal, maxVal);
 
-                currentStats[st.id] = startVal; 
-                initStatsMap[st.id] = startVal;
+                currentStats[st.id] = Math.round(startVal * 10) / 10; 
+                initStatsMap[st.id] = currentStats[st.id];
                 if (st.isSleep) sleepRecords[st.id] = []; 
             });
 
@@ -516,7 +519,7 @@
             
             renderStatusUI(); renderItemUI();
             
-            let firstSceneKey = Object.keys(gameData.story).find(k => k !== "intro" && k !== "end");
+            let firstSceneKey = Object.keys(gameData.story).find(k => k !== "intro" && k !== "end" && k !== "gameover");
             if (!firstSceneKey) firstSceneKey = "end";
 
             let startBtnText = gameData.settings.introBtn && gameData.settings.introBtn.trim() !== "" ? gameData.settings.introBtn : "はじめる";
@@ -601,7 +604,6 @@
             let posts = gameData.settings.snsPosts || [];
             if(posts.length === 0) posts = [{id:"dummy", user:"運営", icon:"⚙️", text:"SNSの投稿が設定されていません。", effects:{}}];
             
-            // ★変更：エディターで設定した件数だけランダム抽出
             let count = gameData.settings.snsCount || 3;
             let shuffled = [...posts].sort(() => 0.5 - Math.random()).slice(0, count);
             
@@ -680,7 +682,8 @@
             
             finalScore = 0;
             gameData.settings.stats.forEach(st => { if(!st.isStep && !st.isSleep) finalScore += currentStats[st.id]; });
-            document.getElementById("res-score").innerText = finalScore;
+            
+            document.getElementById("res-score").innerText = Math.round(finalScore * 10) / 10;
 
             finalTypeKey = determineLifestyleType();
             let typeName = "謎のタイプ"; let typeDesc = "不思議な生活を送りました。";
@@ -694,9 +697,12 @@
             document.getElementById("player-name").value = playerName; 
 
             document.getElementById("res-title").innerText = "🎉 ゲームクリア！";
+            document.getElementById("res-title").style.color = "#ffca28";
             document.getElementById("res-score-area").style.display = "block";
             document.getElementById("submit-area").style.display = "block";
             document.getElementById("tab-rank-type").style.display = "inline-block";
+            document.getElementById("tab-rank-all").style.display = "inline-block";
+            document.getElementById("leaderboard-container").style.display = "block";
 
             const backBtn = document.getElementById("btn-back-title");
             backBtn.innerText = "最初から遊ぶ";
@@ -704,6 +710,26 @@
             
             document.getElementById("result-screen").style.display = "flex";
             currentLeaderboard = gameData.leaderboard || []; switchRankingTab('all');
+        }
+
+        // 💡 修正：ゲームオーバー画面（スコア非表示）の追加
+        function showGameOverScreen() {
+            document.getElementById("game-wrapper").style.display = "none";
+            audioBGM.pause(); playSE('error'); 
+            
+            document.getElementById("res-title").innerText = "💀 ゲームオーバー";
+            document.getElementById("res-title").style.color = "#d32f2f";
+            document.getElementById("res-score-area").style.display = "none";
+            document.getElementById("submit-area").style.display = "none";
+            document.getElementById("tab-rank-type").style.display = "none";
+            document.getElementById("tab-rank-all").style.display = "none";
+            document.getElementById("leaderboard-container").style.display = "none";
+
+            const backBtn = document.getElementById("btn-back-title");
+            backBtn.innerText = "最初からやり直す";
+            backBtn.onclick = backToTitle;
+            
+            document.getElementById("result-screen").style.display = "flex";
         }
 
         async function submitRanking() {
@@ -717,7 +743,8 @@
                 const latestData = await res.json();
                 let board = latestData.record.leaderboard || [];
                 
-                board.push({ name: submitName, score: finalScore, type: finalTypeKey, typeName: document.getElementById("res-type-badge").innerText, date: new Date().toLocaleDateString() });
+                let safeScore = Math.round(finalScore * 10) / 10;
+                board.push({ name: submitName, score: safeScore, type: finalTypeKey, typeName: document.getElementById("res-type-badge").innerText, date: new Date().toLocaleDateString() });
                 board.sort((a, b) => b.score - a.score); board = board.slice(0, 150);
                 latestData.record.leaderboard = board;
 
@@ -746,6 +773,8 @@
 
         function loadScene(key) {
             if (key === "end") { showResultScreen(); return; }
+            if (key === "gameover") { showGameOverScreen(); return; } // 💡 修正：ゲームオーバーへの移動
+            if (key === "intro") { backToTitle(); return; } 
 
             const sc = gameData.story[key]; if (!sc) return;
 
@@ -927,6 +956,7 @@
                 if (stConf && stConf.isStep) {
                     if (val <= 0) return; 
                     currentStats[sid] += val;
+                    currentStats[sid] = Math.round(currentStats[sid] * 10) / 10;
                     const f = document.createElement("div"); f.className = `floating-num`; const barEl = document.getElementById(`txt-bar-${sid}`); 
                     if(barEl) {
                         const rect = barEl.getBoundingClientRect(); f.style.left = rect.left + "px"; f.style.top = rect.top + "px"; f.style.color = "#f57c00"; f.innerText = `+${val}`;
@@ -946,12 +976,18 @@
                 } else {
                     if (val > 0) totalHeal += val;
                     let maxVal = stConf ? (stConf.max !== undefined ? stConf.max : 100) : 100;
-                    currentStats[sid] = Math.max(0, Math.min(maxVal, currentStats[sid] + val));
+                    
+                    let newVal = currentStats[sid] + val;
+                    newVal = Math.round(newVal * 10) / 10;
+                    currentStats[sid] = Math.max(0, Math.min(maxVal, newVal));
                     
                     if (val !== 0) {
                         const bar = document.getElementById(`bar-${sid}`); 
                         if(bar) {
-                            const rect = bar.getBoundingClientRect(); const f = document.createElement("div"); f.className = `floating-num`; f.style.left = (rect.left + 20) + "px"; f.style.top = rect.top + "px"; f.style.color = val > 0 ? "#2ecc71" : "#e74c3c"; f.innerText = val > 0 ? `+${val}` : val;
+                            let dispVal = Math.round(val * 10) / 10;
+                            const rect = bar.getBoundingClientRect(); const f = document.createElement("div"); f.className = `floating-num`; f.style.left = (rect.left + 20) + "px"; f.style.top = rect.top + "px"; 
+                            f.style.color = dispVal > 0 ? "#2ecc71" : "#e74c3c"; 
+                            f.innerText = dispVal > 0 ? `+${dispVal}` : dispVal;
                             document.body.appendChild(f); setTimeout(() => f.remove(), 1200); 
                             let percent = Math.min(100, Math.max(0, (currentStats[sid] / maxVal) * 100));
                             bar.style.width = percent + "%";
@@ -970,7 +1006,8 @@
             if (choice.randomProb && Math.random() * 100 < choice.randomProb) isRandomHit = true;
 
             const checkGameOver = () => {
-                if (choice.next === "intro" || choice.next === "end") return false;
+                // 💡 修正：gameover への移動も無限ループ判定から除外
+                if (choice.next === "intro" || choice.next === "end" || choice.next === "gameover") return false;
 
                 const goCond = gameData.settings.gameOverConditions.find(go => {
                     if (!go.statId || currentStats[go.statId] === undefined) return false;
