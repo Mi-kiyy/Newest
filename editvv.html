@@ -281,13 +281,11 @@
             <div class="card">
                 <h2>🏆 ランキング管理</h2>
                 <p style="font-size:12px; color:#666;">プレイヤーが登録したランキング記録を確認・削除できます。</p>
-                <div id="editor-leaderboard-container" style="background:#f9f9f9; padding:10px; border-radius:5px; max-height:400px; overflow-y:auto; margin-bottom:15px;">
-                    </div>
+                <div id="editor-leaderboard-container" style="background:#f9f9f9; padding:10px; border-radius:5px; max-height:400px; overflow-y:auto; margin-bottom:15px;"></div>
                 <button class="save-btn" style="background:#d32f2f;" onclick="clearAllRanking()">🗑️ すべてのランキング記録を削除する</button>
                 <button class="save-btn" style="margin-top:10px;" onclick="saveRankingToCloud(this)">☁️ ランキングの変更をクラウドに保存</button>
             </div>
         </div></div>
-
     </div>
 
     <div id="preview-area">
@@ -464,8 +462,9 @@
         return `url('${bgPaths["room_m"]}')`;
     }
 
+    // 💡 修正：gameoverの移動先オプションを追加
     function buildSceneOptionsHtml(selectedValue) {
-        let html = `<option value="end" ${selectedValue==='end'?'selected':''}>end (終了画面へ)</option><option value="intro" ${selectedValue==='intro'?'selected':''}>intro (スタート画面へ)</option>`;
+        let html = `<option value="end" ${selectedValue==='end'?'selected':''}>end (終了/クリア画面へ)</option><option value="gameover" ${selectedValue==='gameover'?'selected':''}>gameover (ゲームオーバー画面へ)</option><option value="intro" ${selectedValue==='intro'?'selected':''}>intro (スタート画面へ)</option>`;
         Object.keys(gameData.story).forEach(k => { html += `<option value="${k}" ${selectedValue===k?'selected':''}>${k}</option>`; });
         return html;
     }
@@ -526,8 +525,8 @@
             <div class="list-item form-row">
                 <div class="form-group"><label>ID</label><input type="text" class="st-id" value="${st.id}" oninput="syncSettingsToPreview()"></div>
                 <div class="form-group"><label>名前</label><input type="text" class="st-name" value="${st.name}" oninput="syncSettingsToPreview()"></div>
-                <div class="form-group"><label>初期値</label><input type="number" class="st-init" value="${st.init}" oninput="syncSettingsToPreview()"></div>
-                <div class="form-group"><label>限界値(MAX)</label><input type="number" class="st-max" value="${st.max !== undefined ? st.max : 100}" oninput="syncSettingsToPreview()"></div>
+                <div class="form-group"><label>初期値</label><input type="number" class="st-init" value="${st.init}" step="any" oninput="syncSettingsToPreview()"></div>
+                <div class="form-group"><label>限界値(MAX)</label><input type="number" class="st-max" value="${st.max !== undefined ? st.max : 100}" step="any" oninput="syncSettingsToPreview()"></div>
                 <div class="form-group" style="display:flex; flex-direction:column; justify-content:center; gap:5px; padding-top:15px;">
                     <label style="cursor:pointer; color:#f57c00;"><input type="checkbox" class="st-step" ${st.isStep?'checked':''} onchange="syncSettingsToPreview()"> 👣 歩数計として扱う</label>
                     <label style="cursor:pointer; color:#5c6bc0;"><input type="checkbox" class="st-sleep" ${st.isSleep?'checked':''} onchange="syncSettingsToPreview()"> 🌙 平均睡眠時間として扱う</label>
@@ -538,7 +537,7 @@
 
         const cCont = document.getElementById("clubs-container"); cCont.innerHTML = "";
         (s.clubs || []).forEach((club, i) => {
-            let effHtml = s.stats.map(st => `<div class="form-group"><label>${st.name}</label><input type="number" class="club-eff" data-stid="${st.id}" value="${(club.effects && club.effects[st.id]) ? club.effects[st.id] : 0}"></div>`).join('');
+            let effHtml = s.stats.map(st => `<div class="form-group"><label>${st.name}</label><input type="number" class="club-eff" data-stid="${st.id}" value="${(club.effects && club.effects[st.id]) ? club.effects[st.id] : 0}" step="any"></div>`).join('');
             cCont.innerHTML += `
             <div class="list-item">
                 <div class="form-row">
@@ -557,7 +556,7 @@
         
         const iCont = document.getElementById("items-container"); iCont.innerHTML = "";
         (s.items || []).forEach((it, i) => {
-            let effHtml = s.stats.map(st => `<div class="form-group"><label>${st.name}増減</label><input type="number" class="it-eff" data-stid="${st.id}" value="${(it.effects && it.effects[st.id]) ? it.effects[st.id] : 0}"></div>`).join('');
+            let effHtml = s.stats.map(st => `<div class="form-group"><label>${st.name}増減</label><input type="number" class="it-eff" data-stid="${st.id}" value="${(it.effects && it.effects[st.id]) ? it.effects[st.id] : 0}" step="any"></div>`).join('');
             iCont.innerHTML += `
             <div class="list-item" data-idx="${i}">
                 <div class="form-row">
@@ -573,7 +572,7 @@
 
         const snsCont = document.getElementById("sns-container"); snsCont.innerHTML = "";
         (s.snsPosts || []).forEach((post, i) => {
-            let effHtml = s.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="sns-eff" data-stid="${st.id}" value="${(post.effects && post.effects[st.id]) ? post.effects[st.id] : 0}"></div>`).join('');
+            let effHtml = s.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="sns-eff" data-stid="${st.id}" value="${(post.effects && post.effects[st.id]) ? post.effects[st.id] : 0}" step="any"></div>`).join('');
             snsCont.innerHTML += `
             <div class="list-item" data-id="${post.id}">
                 <div class="form-row">
@@ -602,7 +601,7 @@
 
         const goCont = document.getElementById("gameover-container"); goCont.innerHTML = "";
         (s.gameOverConditions || []).forEach((go, i) => {
-            goCont.innerHTML += `<div class="list-item" style="border-left:4px solid #d32f2f;"><div class="form-row"><div class="form-group"><label>対象ステータス</label><select class="go-stat">${buildStatOptionsHtml(go.statId)}</select></div><div class="form-group"><label>条件</label><select class="go-op"><option value="<=" ${go.operator==='<='?'selected':''}>以下になったら</option><option value=">=" ${go.operator==='>='?'selected':''}>以上になったら</option></select></div><div class="form-group"><label>数値</label><input type="number" class="go-val" value="${go.value}"></div><div class="form-group"><label>強制移動先</label><select class="go-next">${buildSceneOptionsHtml(go.nextScene)}</select></div></div><button class="btn-remove" style="position:absolute; top:10px; right:10px;" onclick="removeGameOver(${i})">削除</button></div>`;
+            goCont.innerHTML += `<div class="list-item" style="border-left:4px solid #d32f2f;"><div class="form-row"><div class="form-group"><label>対象ステータス</label><select class="go-stat">${buildStatOptionsHtml(go.statId)}</select></div><div class="form-group"><label>条件</label><select class="go-op"><option value="<=" ${go.operator==='<='?'selected':''}>以下になったら</option><option value=">=" ${go.operator==='>='?'selected':''}>以上になったら</option></select></div><div class="form-group"><label>数値</label><input type="number" class="go-val" value="${go.value}" step="any"></div><div class="form-group"><label>強制移動先</label><select class="go-next">${buildSceneOptionsHtml(go.nextScene)}</select></div></div><button class="btn-remove" style="position:absolute; top:10px; right:10px;" onclick="removeGameOver(${i})">削除</button></div>`;
         });
 
         renderLifestyleConfig();
@@ -671,6 +670,9 @@
         } catch (e) { alert("保存失敗"); btn.innerText = originalText; btn.style.opacity = "1"; }
     }
 
+    // 💡 修正：ゲームオーバーのデフォルト移動先を gameover に変更
+    function addGameOver() { gameData.settings.gameOverConditions.push({ statId: gameData.settings.stats[0] ? gameData.settings.stats[0].id : "", operator: "<=", value: 0, nextScene: "gameover" }); renderSettings(); }
+
     function addClub() { gameData.settings.clubs.push({ id: "club_" + Date.now().toString().slice(-4), name: "新規の部活", en: "NEW CLUB", desc: "説明文", effects: {} }); renderSettings(); }
     function removeClub(i) { gameData.settings.clubs.splice(i,1); renderSettings(); }
     function addCustomBg() { gameData.settings.customBgs.push({ id: "bg_" + Math.random().toString(36).substr(2, 6), name: "新規背景", url: "" }); renderSettings(); }
@@ -685,7 +687,6 @@
     function removeSnsPost(i) { gameData.settings.snsPosts.splice(i,1); renderSettings(); }
     function addTrivia() { gameData.settings.trivia.push({ text: "新しい豆知識" }); renderSettings(); }
     function removeTrivia(i) { gameData.settings.trivia.splice(i,1); renderSettings(); }
-    function addGameOver() { gameData.settings.gameOverConditions.push({ statId: gameData.settings.stats[0] ? gameData.settings.stats[0].id : "", operator: "<=", value: 0, nextScene: "end" }); renderSettings(); }
     function removeGameOver(i) { gameData.settings.gameOverConditions.splice(i,1); renderSettings(); }
 
     function saveGlobalSettings(silent=false) {
@@ -702,16 +703,16 @@
 
         s.snsCount = parseInt(document.getElementById("g-sns-count").value) || 3;
 
-        s.clubs = []; document.querySelectorAll("#clubs-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".club-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) effects[eff.dataset.stid] = val; }); s.clubs.push({ id: el.querySelector(".club-id").value, name: el.querySelector(".club-name").value, en: el.querySelector(".club-en").value, desc: el.querySelector(".club-desc").value, effects: effects }); });
+        s.clubs = []; document.querySelectorAll("#clubs-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".club-eff").forEach(eff => { let val = parseFloat(eff.value); if(val !== 0 && !isNaN(val)) effects[eff.dataset.stid] = val; }); s.clubs.push({ id: el.querySelector(".club-id").value, name: el.querySelector(".club-name").value, en: el.querySelector(".club-en").value, desc: el.querySelector(".club-desc").value, effects: effects }); });
         s.bgms = []; document.querySelectorAll("#bgm-container .list-item").forEach(el => { s.bgms.push({ id: el.dataset.id, name: el.querySelector(".bgm-name").value, url: el.querySelector(".bgm-url").value }); });
         s.customBgs = []; document.querySelectorAll("#bgs-container .list-item").forEach(el => { s.customBgs.push({ id: el.dataset.id, name: el.querySelector(".bg-name").value, url: el.querySelector(".bg-url").value }); });
         
-        s.stats = []; document.querySelectorAll("#status-container .list-item").forEach(el => { s.stats.push({ id: el.querySelector(".st-id").value, name: el.querySelector(".st-name").value, init: parseInt(el.querySelector(".st-init").value), max: parseInt(el.querySelector(".st-max").value) || 100, isStep: el.querySelector(".st-step").checked, isSleep: el.querySelector(".st-sleep").checked }); });
+        s.stats = []; document.querySelectorAll("#status-container .list-item").forEach(el => { s.stats.push({ id: el.querySelector(".st-id").value, name: el.querySelector(".st-name").value, init: parseFloat(el.querySelector(".st-init").value) || 0, max: parseFloat(el.querySelector(".st-max").value) || 100, isStep: el.querySelector(".st-step").checked, isSleep: el.querySelector(".st-sleep").checked }); });
         
-        s.items = []; document.querySelectorAll("#items-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".it-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0) effects[eff.dataset.stid] = val; }); s.items.push({ id: el.querySelector(".it-id").value, name: el.querySelector(".it-name").value, icon: el.querySelector(".it-icon").value, maxUse: parseInt(el.querySelector(".it-max").value), effects: effects }); });
-        s.snsPosts = []; document.querySelectorAll("#sns-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".sns-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0) effects[eff.dataset.stid] = val; }); s.snsPosts.push({ id: el.dataset.id, user: el.querySelector(".sns-user").value, icon: el.querySelector(".sns-icon").value, text: el.querySelector(".sns-text").value, effects: effects }); });
+        s.items = []; document.querySelectorAll("#items-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".it-eff").forEach(eff => { let val = parseFloat(eff.value); if(val !== 0 && !isNaN(val)) effects[eff.dataset.stid] = val; }); s.items.push({ id: el.querySelector(".it-id").value, name: el.querySelector(".it-name").value, icon: el.querySelector(".it-icon").value, maxUse: parseInt(el.querySelector(".it-max").value), effects: effects }); });
+        s.snsPosts = []; document.querySelectorAll("#sns-container .list-item").forEach(el => { let effects = {}; el.querySelectorAll(".sns-eff").forEach(eff => { let val = parseFloat(eff.value); if(val !== 0 && !isNaN(val)) effects[eff.dataset.stid] = val; }); s.snsPosts.push({ id: el.dataset.id, user: el.querySelector(".sns-user").value, icon: el.querySelector(".sns-icon").value, text: el.querySelector(".sns-text").value, effects: effects }); });
         s.trivia = []; document.querySelectorAll("#trivia-container .tr-text").forEach(el => { s.trivia.push({ text: el.value }); });
-        s.gameOverConditions = []; document.querySelectorAll("#gameover-container .list-item").forEach(el => { s.gameOverConditions.push({ statId: el.querySelector(".go-stat").value, operator: el.querySelector(".go-op").value, value: parseInt(el.querySelector(".go-val").value) || 0, nextScene: el.querySelector(".go-next").value }); });
+        s.gameOverConditions = []; document.querySelectorAll("#gameover-container .list-item").forEach(el => { s.gameOverConditions.push({ statId: el.querySelector(".go-stat").value, operator: el.querySelector(".go-op").value, value: parseFloat(el.querySelector(".go-val").value) || 0, nextScene: el.querySelector(".go-next").value }); });
 
         s.lifestyleTypes = {};
         document.querySelectorAll("#lifestyle-container .ls-item").forEach(el => {
@@ -733,8 +734,8 @@
         const widgetsContainer = document.getElementById("prev-status-widgets"); widgetsContainer.innerHTML = "";
         document.querySelectorAll("#status-container .list-item").forEach((el, i) => { 
             let stName = el.querySelector(".st-name").value || "新規"; 
-            let stInit = parseInt(el.querySelector(".st-init").value) || 0;
-            let stMax = parseInt(el.querySelector(".st-max").value) || 100;
+            let stInit = parseFloat(el.querySelector(".st-init").value) || 0;
+            let stMax = parseFloat(el.querySelector(".st-max").value) || 100;
             let isStep = el.querySelector(".st-step").checked; let isSleep = el.querySelector(".st-sleep").checked;
             const color = statColors[i % statColors.length]; 
             
@@ -775,7 +776,6 @@
     function createScene() { const id = "s_" + Date.now().toString().slice(-4); gameData.story[id] = { text: "新しい質問", choices: [] }; openScene(id); renderSidebar(); }
     
     function openScene(id) {
-        // 💡 追加：切り替え前に現在の状態を保存
         if (currentSceneId && gameData.story[currentSceneId]) {
             syncFormToStory();
         }
@@ -802,7 +802,7 @@
         document.getElementById("s-notif-btn").value = notif.choiceText || "";
         document.getElementById("s-notif-next").innerHTML = buildSceneOptionsHtml(notif.next || "");
         const neffCont = document.getElementById("notif-effects-container"); neffCont.innerHTML = "";
-        gameData.settings.stats.forEach(st => { let val = (notif.effects && notif.effects[st.id]) ? notif.effects[st.id] : 0; neffCont.innerHTML += `<div style="display:flex; align-items:center; gap:5px;"><label style="width:60px;">${st.name}</label><input type="number" class="notif-eff" data-stid="${st.id}" value="${val}" style="width:60px;"></div>`; });
+        gameData.settings.stats.forEach(st => { let val = (notif.effects && notif.effects[st.id]) ? notif.effects[st.id] : 0; neffCont.innerHTML += `<div style="display:flex; align-items:center; gap:5px;"><label style="width:60px;">${st.name}</label><input type="number" class="notif-eff" data-stid="${st.id}" value="${val}" style="width:60px;" step="any"></div>`; });
         toggleNotification();
 
         renderChoices(sc.choices || []); renderSidebar(); updatePreview();
@@ -814,7 +814,7 @@
     function renderChoices(choices) {
         const cont = document.getElementById("choices-container"); cont.innerHTML = "";
         choices.forEach((c, i) => {
-            let effHtml = gameData.settings.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="c-eff" data-stid="${st.id}" value="${(c.effects && c.effects[st.id]) ? c.effects[st.id] : 0}"></div>`).join('');
+            let effHtml = gameData.settings.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="c-eff" data-stid="${st.id}" value="${(c.effects && c.effects[st.id]) ? c.effects[st.id] : 0}" step="any"></div>`).join('');
             const hasRandom = c.randomProb > 0; const randomDisplay = hasRandom ? "block" : "none";
             const hasShake = c.shake === true;
             let randomItemOptions = `<option value="">なし</option>` + (gameData.settings.items || []).map(it => `<option value="${it.id}" ${c.randomItem === it.id ? 'selected' : ''}>${it.name}</option>`).join('');
@@ -835,7 +835,7 @@
                         <div class="form-row" style="margin-bottom:0;">
                             <div class="form-group"><label>対象ステータス</label><select class="c-cond-stat" onchange="updatePreview()">${buildStatOptionsHtml(cond.statId)}</select></div>
                             <div class="form-group"><label>条件</label><select class="c-cond-op"><option value=">=" ${cond.op==='>='?'selected':''}>以上が必要</option><option value="<=" ${cond.op==='<='?'selected':''}>以下が必要</option></select></div>
-                            <div class="form-group"><label>数値</label><input type="number" class="c-cond-val" value="${cond.val || 0}"></div>
+                            <div class="form-group"><label>数値</label><input type="number" class="c-cond-val" value="${cond.val || 0}" step="any"></div>
                         </div>
                     </div>
                 </div>
@@ -859,7 +859,7 @@
                         </div>
                         <div class="form-row" style="background:#fff; padding:10px; border-radius:4px; border:1px solid #ffe0b2; margin-top:10px;">
                             <div style="width:100%; font-size:12px; font-weight:bold; color:#e65100; margin-bottom:5px;">▼ ランダム時のステータス変更値</div>
-                            ${gameData.settings.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="c-r-eff" data-stid="${st.id}" value="${(c.randomEffects && c.randomEffects[st.id]) ? c.randomEffects[st.id] : 0}"></div>`).join('')}
+                            ${gameData.settings.stats.map(st => `<div class="form-group" style="margin-bottom:0;"><label>${st.name}</label><input type="number" class="c-r-eff" data-stid="${st.id}" value="${(c.randomEffects && c.randomEffects[st.id]) ? c.randomEffects[st.id] : 0}" step="any"></div>`).join('')}
                         </div>
                         <div class="form-row" style="background:#fff; padding:10px; border-radius:4px; border:1px solid #ffe0b2; margin-top:10px;">
                             <div style="width:100%; font-size:12px; font-weight:bold; color:#e65100; margin-bottom:5px;">▼ アイテムの獲得・消費</div>
@@ -886,7 +886,6 @@
         if (!currentSceneId || !gameData.story[currentSceneId]) return;
         const sc = gameData.story[currentSceneId]; 
         
-        // 💡 修正：基本情報の同期を追加
         sc.text = document.getElementById("s-text").value;
         sc.bg = document.getElementById("s-bg").value;
         sc.bgm = document.getElementById("s-bgm").value;
@@ -897,21 +896,21 @@
         
         sc.call = { enabled: document.getElementById("s-call-en").checked, caller: document.getElementById("s-call-name").value, accept: { next: document.getElementById("s-call-accept-next").value }, reject: { next: document.getElementById("s-call-reject-next").value } };
         sc.notification = { enabled: document.getElementById("s-notif-en").checked, title: document.getElementById("s-notif-title").value, text: document.getElementById("s-notif-text").value, choiceText: document.getElementById("s-notif-btn").value, next: document.getElementById("s-notif-next").value, effects: {} };
-        document.querySelectorAll(".notif-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) sc.notification.effects[eff.dataset.stid] = val; });
+        document.querySelectorAll(".notif-eff").forEach(eff => { let val = parseFloat(eff.value); if(val !== 0 && !isNaN(val)) sc.notification.effects[eff.dataset.stid] = val; });
 
         document.querySelectorAll("#choices-container .list-item").forEach(el => {
-            let effects = {}; el.querySelectorAll(".c-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) effects[eff.dataset.stid] = val; });
+            let effects = {}; el.querySelectorAll(".c-eff").forEach(eff => { let val = parseFloat(eff.value); if(val !== 0 && !isNaN(val)) effects[eff.dataset.stid] = val; });
             let choiceData = { text: el.querySelector(".c-text").value, next: el.querySelector(".c-next").value, effects: effects };
             
             const condCb = el.querySelector("input[onchange='toggleCondition(this)']");
-            if (condCb && condCb.checked) { choiceData.condition = { statId: el.querySelector(".c-cond-stat").value, op: el.querySelector(".c-cond-op").value, val: parseInt(el.querySelector(".c-cond-val").value) || 0 }; }
+            if (condCb && condCb.checked) { choiceData.condition = { statId: el.querySelector(".c-cond-stat").value, op: el.querySelector(".c-cond-op").value, val: parseFloat(el.querySelector(".c-cond-val").value) || 0 }; }
 
             const shakeCb = el.querySelector(".c-shake"); if(shakeCb && shakeCb.checked) choiceData.shake = true;
 
             const randomCheckbox = el.querySelector("input[onchange='toggleRandom(this)']"); 
             if (randomCheckbox && randomCheckbox.checked) { 
-                choiceData.randomProb = parseInt(el.querySelector(".c-r-prob").value) || 0; choiceData.randomNext = el.querySelector(".c-r-next").value; choiceData.randomName = el.querySelector(".c-r-name") ? el.querySelector(".c-r-name").value : ""; choiceData.randomText = el.querySelector(".c-r-text") ? el.querySelector(".c-r-text").value : ""; choiceData.randomBg = el.querySelector(".c-r-bg") ? el.querySelector(".c-r-bg").value : ""; choiceData.randomBtn = el.querySelector(".c-r-btn") ? el.querySelector(".c-r-btn").value : ""; choiceData.randomItem = el.querySelector(".c-r-item") ? el.querySelector(".c-r-item").value : ""; choiceData.randomItemVal = el.querySelector(".c-r-item-val") ? parseInt(el.querySelector(".c-r-item-val").value) : 0;
-                let randomEffects = {}; el.querySelectorAll(".c-r-eff").forEach(eff => { let val = parseInt(eff.value); if(val !== 0 && !isNaN(val)) randomEffects[eff.dataset.stid] = val; }); choiceData.randomEffects = randomEffects;
+                choiceData.randomProb = parseInt(el.querySelector(".c-r-prob").value) || 0; choiceData.randomNext = el.querySelector(".c-r-next").value; choiceData.randomName = el.querySelector(".c-r-name") ? el.querySelector(".c-r-name").value : ""; choiceData.randomText = el.querySelector(".c-r-text") ? el.querySelector(".c-r-text").value : ""; choiceData.randomBg = el.querySelector(".c-r-bg") ? el.querySelector(".c-r-bg").value : ""; choiceData.randomBtn = el.querySelector(".c-r-btn") ? el.querySelector(".c-r-btn").value : ""; choiceData.randomItem = el.querySelector(".c-r-item") ? el.querySelector(".c-r-item").value : ""; choiceData.randomItemVal = parseInt(el.querySelector(".c-r-item-val").value) || 0;
+                let randomEffects = {}; el.querySelectorAll(".c-r-eff").forEach(eff => { let val = parseFloat(eff.value); if(val !== 0 && !isNaN(val)) randomEffects[eff.dataset.stid] = val; }); choiceData.randomEffects = randomEffects;
             }
             sc.choices.push(choiceData);
         });
@@ -953,14 +952,12 @@
         const newId = document.getElementById("s-id").value.trim(); if(!newId) return;
         if(newId !== currentSceneId) { gameData.story[newId] = gameData.story[currentSceneId]; delete gameData.story[currentSceneId]; currentSceneId = newId; }
         
-        // 💡 修正：直接関数を呼ぶように変更
         syncFormToStory(); 
         renderSidebar(); 
         renderSettings();
         alert("シーンを一時保存しました！");
     }
     
-    // 💡 修正：モーダル表示用の関数
     function openModal(type) {
         const modal = document.getElementById("io-modal"); 
         const ta = document.getElementById("io-textarea"); 
